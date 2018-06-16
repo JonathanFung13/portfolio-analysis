@@ -131,5 +131,6 @@ if __name__ == "__main__":
         symbols = passive_funds + active_funds
         #load_data(stocks, start_date, end_date)
         #load_data(passive_funds, start_date, end_date)
-        extract_vanguard(['VMRXX', 'VUSXX'], start_date, end_date)
+        #extract_vanguard(['VMRXX', 'VUSXX'], start_date, end_date)
+        extract_stocks(stocks, start_date, end_date)
 
