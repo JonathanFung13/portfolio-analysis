@@ -105,4 +105,4 @@ if __name__ == "__main__":
     cr, adr, sddr, sr, ev = compute_portfolio_value(start_date, end_date, myport, allocations, \
                                                         gen_plot=True)
 
-    print(cr, adr, sddr, sr, ev)
+    print(cr)
