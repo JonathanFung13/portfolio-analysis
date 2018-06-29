@@ -15,6 +15,7 @@ import requests
 #from pprint import pprint
 #from sys import exit
 import json
+import numpy as np
 #import csv
 
 
@@ -77,13 +78,14 @@ def extract_vanguard(symbols, start, end):
 
         data = pd.DataFrame(data=subjson)
         data = data.rename(columns={'amt': 'Close', 'asOfDt': 'Date'})
+        data = data.set_index('Date')
+        data = data.sort_index()
 
         path = os.path.join("data", "{}.csv".format(str(symbol)))
         data.to_csv(path, sep=",",)
 
-        data = data.set_index('Date')
 
-        return data
+    return data
 
 def load_data(symbols, start, end, addSPY=True, colname = 'Close'):
     df = pd.DataFrame(index=pd.date_range(start, end))
@@ -93,8 +95,8 @@ def load_data(symbols, start, end, addSPY=True, colname = 'Close'):
     for symbol in symbols:
         try:
             path = os.path.join("data", "{}.csv".format(str(symbol)))
-            df_temp = pd.read_csv(path, index_col='Date', parse_dates=True,
-                                  usecols=['Date', colname], na_values=['nan'])
+            df_temp = pd.read_csv(path, index_col='Date', parse_dates=True, usecols=['Date', colname],
+                                  na_values=['nan', 'null'])
 
             # If data files are missing data, redownload the whole range of data.
             if df_temp.index.max() < end: # or df_temp.index.min() > start:
@@ -103,6 +105,7 @@ def load_data(symbols, start, end, addSPY=True, colname = 'Close'):
                     df_temp = extract_vanguard([symbol], start, end)
                 else:
                     df_temp = extract_stocks(symbols, start, end)
+                #df_temp = pd.to_numeric(df_temp, errors='coerce')
                 df_temp = df_temp[colname].to_frame()
 
             df_temp = df_temp.rename(columns={colname: symbol})
@@ -115,25 +118,37 @@ def load_data(symbols, start, end, addSPY=True, colname = 'Close'):
     return df
 
 
+def save_df_as_csv(df, foldername, filename):
+
+    try:
+        path = os.path.join(foldername, "{}.csv".format(str(filename)))
+        df.to_csv(path,sep=",",)
+    except TypeError:
+        print(filename, "caused an error")
+
+    return
+
 if __name__ == "__main__":
 
     print("This is just a utility module.  Run portfolio-stats.py")
 
     if True: # some junk parameters below to help with debugging
         start_date = dt.datetime(2005, 1, 1)
-        end_date = dt.datetime(2018, 6, 14)
+        end_date = dt.datetime(2018, 6, 27)
 
         target_retirement = [] #['LIKKX']
         stocks = ['DIS', 'TSLA']
         passive_funds = ['VFFSX', 'VITPX', 'VMCPX', 'VSCPX', 'MDDCX','FSPNX', 'VBTIX']
         active_funds = ['FMGEX', 'VMRXX', 'VUSXX']
 
-        symbols = passive_funds + active_funds
+        myfunds = ['VFFSX', 'VITPX', 'VMCPX', 'VSCPX', 'VBTIX']
+
+        #symbols = passive_funds + active_funds
         #load_data(stocks, start_date, end_date)
         #load_data(passive_funds, start_date, end_date)
-        #extract_vanguard(['VMRXX', 'VUSXX'], start_date, end_date)
-        #extract_stocks(stocks, start_date, end_date)
-        myport = ['IBM', 'GLD', 'XOM', 'AAPL', 'MSFT', 'TLT', 'SHY']
-        extract_stocks(myport, start_date, end_date)
+        #extract_vanguard(myfunds, start_date, end_date)
+        extract_stocks(['FSPNX'], start_date, end_date)
+        #myport = ['IBM', 'GLD', 'XOM', 'AAPL', 'MSFT', 'TLT', 'SHY']
+        #extract_stocks(myport, start_date, end_date)
 
 
