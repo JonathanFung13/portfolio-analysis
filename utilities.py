@@ -118,11 +118,11 @@ def load_data(symbols, start, end, addSPY=True, colname = 'Close'):
     return df
 
 
-def save_df_as_csv(df, foldername, filename):
+def save_df_as_csv(df, foldername, filename, indexname=None):
 
     try:
         path = os.path.join(foldername, "{}.csv".format(str(filename)))
-        df.to_csv(path,sep=",",)
+        df.to_csv(path, sep=",", index_label=indexname)
     except TypeError:
         print(filename, "caused an error")
 
@@ -132,10 +132,12 @@ def load_csv_as_df(foldername, filename, index='Date'):
 
     path = os.path.join(foldername, "{}.csv".format(filename))
 
-    if index == 'Date':
+    if index is None:
+        df = pd.read_csv(path)
+    elif 'Date' == index:
         df = pd.read_csv(path, index_col=index, parse_dates=True)
     else:
-        df = pd.read_csv(path)
+        df = pd.read_csv(path, index_col=index)
 
     return df
 

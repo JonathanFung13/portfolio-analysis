@@ -6,15 +6,14 @@ import utilities as util
 
 
 def load_allocations():
-    actual_allocations = util.load_csv_as_df('allocations','actual',None)
-    target_allocations = util.load_csv_as_df('allocations','target',None)
+    actual_allocations = util.load_csv_as_df('allocations','actual', None)
+    target_allocations = util.load_csv_as_df('allocations','target', None)
 
     return actual_allocations, target_allocations
 
 
 def create_orders(max_trade_size=0.10):
     actual, target = load_allocations()
-    cols = ['Date', 'Symbol', 'Action', 'Quantity']
 
     orders = [] #pd.DataFrame(columns=['Date', 'Symbol', 'Action', 'Quantity'])
     buy = []
@@ -34,8 +33,14 @@ def create_orders(max_trade_size=0.10):
             change = [dt.date.today().strftime("%m/%d/%Y"), actual.ix[i][0], 'BUY', delta] #, columns=cols)
             buy.append(change)
 
-    buy = pd.DataFrame(buy, columns=cols)
+
+    cols = ['Date', 'Symbol', 'Action', 'Quantity']
+    ind = ['Date', 'Symbol']
+
+    buy = pd.DataFrame(data=buy, columns=cols)
+    #buy = buy.set_index(ind)
     sell = pd.DataFrame(sell, columns=cols)
+    #sell = sell.set_index(ind)
 
     total_bought = buy['Quantity'].sum()
     total_sold = sell['Quantity'].sum()
@@ -43,12 +48,33 @@ def create_orders(max_trade_size=0.10):
     # Update Buy Orders in case not enough was sold
     if total_bought > total_sold:
         buy['Quantity'] *= total_sold/total_bought
+        buy['Quantity'] = np.round(buy['Quantity'], 3)
+        total_bought = buy['Quantity'].sum()
+        buy['Quantity'][0] = buy['Quantity'][0] + total_sold - total_bought
+
     # Update Sell Orders in case not enough was bought
     elif total_bought < total_sold:
         sell['Quantity'] *= total_bought/total_sold
+        sell['Quantity'] = np.round(sell['Quantity'], 3)
+        total_sold = sell['Quantity'].sum()
+        sell['Quantity'][0] = sell['Quantity'][0] + total_bought - total_sold
 
-    orders = pd.concat([buy, sell], axis=0)
+    #try:
+    #    assert 1 == 2, 'Inequals amounts bought or sold'
+    #except AssertionError as e:
+    #    print(e.message)
+
+    assert buy['Quantity'].sum() == sell['Quantity'].sum(), 'Inequal amounts bought or sold'
+
+    orders = pd.concat([sell, buy], axis=0, ignore_index=True)
     orders['Quantity'] = np.round(orders['Quantity'], 3)
+
+    all_orders = util.load_csv_as_df('orders', 'orders', 'Trade_Num')
+    #all_orders.set_index(ind)
+    all_orders = pd.concat([all_orders, orders], axis=0, ignore_index=True)
+
+    util.save_df_as_csv(all_orders, 'orders', 'orders', 'Trade_Num')
+
 
     return orders
 
