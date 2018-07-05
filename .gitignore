@@ -1,3 +1,12 @@
+# Ignore all
+*
+
+# Unignore all with extensions
+!*.*
+
+# Unignore all directories
+!*/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
