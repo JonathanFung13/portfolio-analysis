@@ -99,7 +99,7 @@ def optimize_return(forecasts, symbols=['AAPL', 'GOOG'],
     #     j = num_allocations - len(symbols) + i
     #     iallocations[j] = temp_alloc
 
-    adr, vol, sr = map(compute_returns(), iallocations)
+    #adr, vol, sr = map(compute_returns(), iallocations)
 
     for i, allocs in enumerate(iallocations):
         adr[i], vol[i], sr[i] = compute_returns(forecasts, allocations=iallocations[i], rfr=rfr, sf=sf)
@@ -134,7 +134,7 @@ def optimize_return(forecasts, symbols=['AAPL', 'GOOG'],
             temp_vol = vol[i]
 
     allocations_ef4 = np.sum([allocations_ef1, allocations_ef2, allocations_ef3], axis=0)
-    allocations_ef4 = allocations_ef4 / 3
+    allocations_ef4 = np.round(allocations_ef4 / 3, decimals=3)
 #    temp = np.array(allocations) * 0.8
 #    allocations_ef4 = np.sum([temp, allocations_ef4], axis=0)
     #allocations_ef4 = iallocations[243]
@@ -153,7 +153,7 @@ def optimize_return(forecasts, symbols=['AAPL', 'GOOG'],
     print("\nALLOCATIONS\n" + "-" * 40)
     print("", "Current", "Efficient")
     for i, symbol in enumerate(symbols):
-        print("%s %.2f %.2f %.2f %.2f %.2f" %
+        print("%s %.3f %.3f %.3f %.3f %.3f" %
               (symbol, allocations[i], allocations_ef1[i], allocations_ef2[i], allocations_ef3[i], allocations_ef4[i]))
 
     # Compare daily portfolio value with SPY using a normalized plot
@@ -190,13 +190,13 @@ def optimize_return(forecasts, symbols=['AAPL', 'GOOG'],
 
 
 
-    target_portfolio = pd.DataFrame(data=allocations_ef3, index=symbols, columns=['Allocations']) #, index=)
-    target_portfolio.index.name = 'Symbol'
+    target_allocations = pd.DataFrame(data=allocations_ef4, index=symbols, columns=['Allocations']) #, index=)
+    target_allocations.index.name = 'Symbol'
 
 
-    util.save_df_as_csv(target_portfolio, 'portfolios', 'target')
+    util.save_df_as_csv(target_allocations, 'allocations', 'target')
 
-    return allocations_ef3
+    return allocations_ef4
 
 
 
@@ -217,9 +217,9 @@ if __name__ == "__main__":
     if useForecasts:
 
         forecasts = load_forecasts(start_date, end_date)
-        target_portfolio = optimize_return(forecasts, myport, allocations, gen_plot=True)
+        target_allocations = optimize_return(forecasts, myport, allocations, gen_plot=True)
 
-        print(target_portfolio)
+        print(target_allocations)
 
     else:
 
@@ -236,9 +236,9 @@ if __name__ == "__main__":
         # forecasts = forecasts.shift(periods=-n_days)
         # forecasts = forecasts[start_date:end_date]
 
-        target_portfolio = optimize_return(forecasts, myport, allocations, gen_plot=True)
+        target_allocations = optimize_return(forecasts, myport, allocations, gen_plot=True)
 
-        print(target_portfolio)
+        print(target_allocations)
 
 
 
