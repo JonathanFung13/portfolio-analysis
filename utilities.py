@@ -128,6 +128,17 @@ def save_df_as_csv(df, foldername, filename):
 
     return
 
+def load_csv_as_df(foldername, filename, index='Date'):
+
+    path = os.path.join(foldername, "{}.csv".format(filename))
+
+    if index == 'Date':
+        df = pd.read_csv(path, index_col=index, parse_dates=True)
+    else:
+        df = pd.read_csv(path)
+
+    return df
+
 if __name__ == "__main__":
 
     print("This is just a utility module.  Run portfolio-stats.py")
