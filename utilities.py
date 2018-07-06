@@ -128,18 +128,53 @@ def save_df_as_csv(df, foldername, filename, indexname=None):
 
     return
 
-def load_csv_as_df(foldername, filename, index='Date'):
+def load_csv_as_df(foldername, filename, index=None):
 
     path = os.path.join(foldername, "{}.csv".format(filename))
 
-    if index is None:
-        df = pd.read_csv(path)
-    elif 'Date' == index:
-        df = pd.read_csv(path, index_col=index, parse_dates=True)
-    else:
-        df = pd.read_csv(path, index_col=index)
+    try:
+        if index is None:
+            df = pd.read_csv(path)
+        elif 'Date' == index:
+            df = pd.read_csv(path, index_col=index, parse_dates=True)
+        else:
+            df = pd.read_csv(path, index_col=index)
 
-    return df
+        return df
+    except:
+        return None
+
+def verify_allocations():
+
+    actuals = load_csv_as_df('allocations', 'actual')
+
+    if isinstance(actuals, pd.DataFrame):
+        portfolio = actuals.loc[:,'Symbol'].tolist()
+        allocations = actuals.loc[:,'Allocations'].tolist()
+    else:
+        portfolio, allocations = input_allocations()
+
+    return portfolio, allocations
+
+
+def input_allocations():
+    nFunds = int(input('How many funds are in your portfolio? '))
+
+    portfolio = []
+
+    for i in range(nFunds):
+        portfolio.append(input(('Enter the symbol for fund number %i: ') % (i+1)))
+
+    print('\n' + '-'*20 + '\n')
+
+    allocations = np.zeros(nFunds)
+    for i in range(nFunds):
+        allocations[i] = float(input(('Enter the percent allocation for %s: ') % (portfolio[i])))
+
+    if allocations.sum() != 1.0:
+        allocations /= allocations.sum()
+
+    return portfolio, allocations
 
 if __name__ == "__main__":
 

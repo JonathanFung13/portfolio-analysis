@@ -15,7 +15,6 @@ def load_allocations():
 def create_orders(max_trade_size=0.10):
     actual, target = load_allocations()
 
-    orders = [] #pd.DataFrame(columns=['Date', 'Symbol', 'Action', 'Quantity'])
     buy = []
     sell = []
 
@@ -50,7 +49,7 @@ def create_orders(max_trade_size=0.10):
         buy['Quantity'] *= total_sold/total_bought
         buy['Quantity'] = np.round(buy['Quantity'], 3)
         total_bought = buy['Quantity'].sum()
-        buy['Quantity'][0] = buy['Quantity'][0] + total_sold - total_bought
+        buy.loc[0, 'Quantity'] += total_sold - total_bought
 
     # Update Sell Orders in case not enough was bought
     elif total_bought < total_sold:
