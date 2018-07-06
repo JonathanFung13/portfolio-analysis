@@ -27,6 +27,21 @@ def run(n_days=21, max_trade_size=0.10, gen_plot=False):
     forecast = fc.forecast(start_date, end_date, myport, n_days=n_days, gen_plot=gen_plot)
     target_allocations = opt.optimize_return(forecast, myport, allocations, gen_plot=gen_plot)
     orders = td.create_orders(max_trade_size=max_trade_size)
+
+    new_allocations = allocations.copy()
+    for i in range(orders.shape[0]):
+
+        index = myport.index(orders.loc[i, 'Symbol'])
+
+        if orders.loc[i, 'Action'] == 'SELL':
+            new_allocations[index] -= orders.loc[i, 'Quantity']
+        else:
+            new_allocations[index] += orders.loc[i, 'Quantity']
+
+
+#    new_allocations = allocations -
+
+
     print(orders)
 
 if __name__ == "__main__":
