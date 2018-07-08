@@ -12,7 +12,9 @@ def load_allocations():
     return actual_allocations, target_allocations
 
 
-def create_orders(max_trade_size=0.10):
+def create_orders(actual, target, max_trade_size=0.10):
+    actual = pd.DataFrame(actual)
+    target = pd.DataFrame(target)
     actual, target = load_allocations()
 
     buy = []

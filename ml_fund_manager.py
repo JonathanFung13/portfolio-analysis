@@ -7,31 +7,28 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+def calc_start_date(end_date=dt.datetime(2017,1,1), data_size=12):
+    return end_date-dt.timedelta(weeks=int(data_size * 52/12))
 
-def run(n_days=21, max_trade_size=0.10, gen_plot=False):
+def run_today(start_date=dt.datetime(2015,1,1), end_date=dt.datetime(2017,1,1), n_days=21, data_size=12,
+              myport=['AAPL', 'GOOG'], allocations=[0.5,0.5],
+              train_size=0.7, max_k=50, max_trade_size=0.1, gen_plot=False):
 
-    delta = 10 #0
 
-    today = dt.date.today()
-    yr = today.year
-    mo = today.month - 1
-    da = today.day - 1
+    start_date = calc_start_date(end_date, data_size)#end_date - dt.timedelta(weeks=int(data_size * 52/12))
 
-    #end_date = dt.datetime.today() - dt.timedelta(days=delta)
-    #start_date = end_date - dt.timedelta(days=1, weeks=52)
-
-    start_date = dt.datetime(yr - 1, mo, da)
-    end_date = dt.datetime(yr, mo, da)
-
-    myport, allocations = util.verify_allocations()
+    #myport, allocations = util.verify_allocations()
 
 
     print('-'*20 + '\nFORECAST\n' + '-'*20)
-    forecast = fc.forecast(start_date, end_date, myport, n_days=n_days, gen_plot=gen_plot)
+    forecast = fc.forecast(start_date, end_date, symbols=myport, train_size=train_size,
+                           n_days=n_days, max_k=max_k, gen_plot=gen_plot)
+
     print('\n'+'-'*20 + '\nOPTIMIZE\n' + '-'*20)
     target_allocations = opt.optimize_return(forecast, myport, allocations, gen_plot=gen_plot)
+
     print('\n' + '-'*20 + '\nORDERS\n' + '-'*20)
-    orders = td.create_orders(max_trade_size=max_trade_size)
+    orders = td.create_orders(allocations, target_allocations, max_trade_size=max_trade_size)
 
     print(orders)
 
@@ -56,7 +53,7 @@ def run(n_days=21, max_trade_size=0.10, gen_plot=False):
     print("Sharpe Ratio: %.5f %.5f %.5f" % (sr_current, sr_target, sr_new))
     print("Return vs Risk: %.5f %.5f %.5f" % (adr_current/vol_current, adr_target/vol_target, adr_new/vol_new))
     print("\nALLOCATIONS\n" + "-" * 40)
-    print("", "Current", "Efficient")
+    print("Symbol", "Current", "Target", 'New')
     for i, symbol in enumerate(myport):
         print("%s %.3f %.3f %.3f" %
               (symbol, allocations[i], target_allocations[i], new_allocations[i]))
@@ -109,8 +106,73 @@ def run(n_days=21, max_trade_size=0.10, gen_plot=False):
     df_temp = df_temp / df_temp.ix[0, :]
     util.plot_data(df_temp, 'Daily portfolio value and SPY', 'Date', 'Normalized Price')
 
+    return adr_new, vol_new, sr_new, pv_new, new_allocations
+
+def test_experiment_one(n_days=21, data_size=12, train_size=0.7, max_k=50, max_trade_size=0.1,
+                        years_to_go_back=2, gen_plot=False):
+
+    today = dt.date.today()
+    yr = today.year - years_to_go_back
+    mo = today.month - 1  # Just temporary, take out 1 when data download is fixed.
+    da = today.day - 1
+
+    end_date = dt.datetime(yr, mo, da)
+
+    adr = [None] * 12
+    vol = [None] * 12
+    sr = [None] * 12
+
+    myport = ['AAPL', 'GLD']
+    myalloc = [0.5,0.5]
+
+    for i in range(12):
+        end_date = end_date + dt.timedelta(weeks=int((i+1)*52/12))
+
+        print(('EXPERIMENT %i') % (i))
+
+        adr[i], vol[i], sr[i], pv, myalloc = run_today(end_date=end_date, n_days=n_days, data_size=data_size,
+                                                       myport=myport, allocations=myalloc,
+                                                       train_size=train_size, max_k=max_k,
+                                                       max_trade_size=max_trade_size, gen_plot=False)
+
 
 if __name__ == "__main__":
-    print("Running ML Fund Manager")
-    run(n_days=21, max_trade_size=0.2, gen_plot=False)
+
+    test = True
+
+    today = dt.date.today()
+    yr = today.year
+    mo = today.month - 1  # Just temporary, take out 1 when data download is fixed.
+    da = today.day - 1
+
+    end_date = dt.datetime(yr, mo, da)
+
+    if test == False:
+        print("Running ML Fund Manager")
+
+        myport, allocations = util.verify_allocations()
+
+        n_days = 21 # How long the forecast should look out
+        data_size = 12 # Number of months of data to use for forecasting
+        train_size = 0.70 # Size of training data, rest is test
+        max_k = 50 # Maximum value of k for kNN
+        max_trade_size= 0.10 # Maximum amount of allocation allowed in a trade
+
+        run_today(end_date=end_date, n_days=n_days, data_size=data_size,
+                  myport=myport, allocations=allocations,
+                  train_size=train_size, max_k=max_k,
+                  max_trade_size=max_trade_size, gen_plot=False)
+    else:
+        print("Testing ML Fund Manager")
+
+        n_days = 21  # How long the forecast should look out
+        data_size = 12  # Number of months of data to use for forecasting
+        train_size = 0.70  # Size of training data, rest is test
+        max_k = 50  # Maximum value of k for kNN
+        max_trade_size = 0.10  # Maximum amount of allocation allowed in a trade
+
+        years_to_go_back = 2
+
+        test_experiment_one(n_days=n_days, data_size=data_size, train_size=train_size, max_k=max_k,
+                            max_trade_size=max_trade_size, years_to_go_back=years_to_go_back, gen_plot=False)
 

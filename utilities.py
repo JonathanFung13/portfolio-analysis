@@ -128,7 +128,7 @@ def compute_returns(prices, allocations, sf=252.0, rfr=0.0):
 
     # Normalize prices and calculate position values
     prices_normalized = prices / prices.ix[0,:]
-    prices_normalized = prices_normalized - daily_er
+    prices_normalized = prices_normalized #- daily_er
     position_values = prices_normalized * allocations
 
     # Get daily portfolio value

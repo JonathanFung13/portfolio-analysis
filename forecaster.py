@@ -165,7 +165,7 @@ def split_data(bb, rolling_std, momentum, psma, y, train_size=0.7, n_days=21):
     return train_x, test_x, forecast_x, train_y, test_y
 
 def forecast(start=dt.datetime(2015,1,1), end=dt.datetime(2017,1,1), symbols=['AAPL', 'GOOG'],
-             train_size = 0.7, n_days=21, gen_plot=False):
+             train_size = 0.7, n_days=21, max_k=20, gen_plot=False):
 
     # Load the technical indicators
     bb, rolling_std, momentum, psma, y = technical_indicators(start=start, end=end, symbols=symbols,
@@ -177,7 +177,7 @@ def forecast(start=dt.datetime(2015,1,1), end=dt.datetime(2017,1,1), symbols=['A
 
 
     # construct the set of hyperparameters to tune
-    params = {'n_neighbors': np.arange(1, 12), \
+    params = {'n_neighbors': np.arange(1, max_k), \
               'weights': ['uniform', 'distance'], \
               'p': [1, 2]}
 
