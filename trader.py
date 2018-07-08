@@ -63,7 +63,7 @@ def create_orders(max_trade_size=0.10):
     #except AssertionError as e:
     #    print(e.message)
 
-    assert buy['Quantity'].sum() == sell['Quantity'].sum(), 'Inequal amounts bought or sold'
+    #assert buy['Quantity'].sum() == sell['Quantity'].sum(), 'Inequal amounts bought or sold'
 
     orders = pd.concat([sell, buy], axis=0, ignore_index=True)
     orders['Quantity'] = np.round(orders['Quantity'], 3)

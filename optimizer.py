@@ -30,32 +30,8 @@ def load_forecasts(start, end, filename="day_21_forecast"):
 
     return forecast #_df.dropna()
 
-def calc_daily_er(ers, sf=252):
-    return [er/(100*sf) for er in ers]
-
-def compute_returns(prices, allocations, sf=252.0, rfr=0.0):
-
-    expense_ratio = [0.01, 0.03, 0.09, 0.02, 0.03, 0.03, 0.88, 0.05]
-    daily_er = calc_daily_er(expense_ratio, 252)
 
 
-    # Normalize prices and calculate position values
-    prices_normalized = prices / prices.ix[0,:]
-    prices_normalized = prices_normalized - daily_er
-    position_values = prices_normalized * allocations
-
-    # Get daily portfolio value
-    portfolio_value = position_values.sum(axis=1)
-
-    daily_returns = portfolio_value.pct_change()
-    daily_returns = daily_returns[1:]
-
-
-    average_daily_return = daily_returns.mean()
-    volatility_daily_return = daily_returns.std()
-    sharpe_ratio = (sf**0.5) * (average_daily_return - rfr) / volatility_daily_return
-
-    return average_daily_return, volatility_daily_return, sharpe_ratio
 
 def optimize_return(forecasts, symbols=['AAPL', 'GOOG'],
                     allocations=[0.5,0.5], rfr=0.0, sf=252.0, gen_plot=False):
@@ -71,7 +47,7 @@ def optimize_return(forecasts, symbols=['AAPL', 'GOOG'],
     """
 
     # Get statistics for current allocations
-    adr_curr, vol_curr, sr_curr = compute_returns(forecasts, allocations=allocations, rfr=rfr, sf=sf)
+    adr_curr, vol_curr, sr_curr, pv_curr = util.compute_returns(forecasts, allocations=allocations, rfr=rfr, sf=sf)
 
     # Generate 500 random allocations
     num_allocations = 2000
@@ -102,7 +78,7 @@ def optimize_return(forecasts, symbols=['AAPL', 'GOOG'],
     #adr, vol, sr = map(compute_returns(), iallocations)
 
     for i, allocs in enumerate(iallocations):
-        adr[i], vol[i], sr[i] = compute_returns(forecasts, allocations=iallocations[i], rfr=rfr, sf=sf)
+        adr[i], vol[i], sr[i], pv_i = util.compute_returns(forecasts, allocations=iallocations[i], rfr=rfr, sf=sf)
 
         # Logic attempt number 3 for optimizing portfolio: max Sharpe ratio
         if sr[i] > sr_max:
@@ -139,10 +115,10 @@ def optimize_return(forecasts, symbols=['AAPL', 'GOOG'],
 #    allocations_ef4 = np.sum([temp, allocations_ef4], axis=0)
     #allocations_ef4 = iallocations[243]
 
-    adr_ef1, vol_ef1, sr_ef1 = compute_returns(forecasts, allocations=allocations_ef1, rfr=rfr, sf=sf)
-    adr_ef2, vol_ef2, sr_ef2 = compute_returns(forecasts, allocations=allocations_ef2, rfr=rfr, sf=sf)
-    adr_ef3, vol_ef3, sr_ef3 = compute_returns(forecasts, allocations=allocations_ef3, rfr=rfr, sf=sf)
-    adr_ef4, vol_ef4, sr_ef4 = compute_returns(forecasts, allocations=allocations_ef4, rfr=rfr, sf=sf)
+    adr_ef1, vol_ef1, sr_ef1, pv_ef1 = util.compute_returns(forecasts, allocations=allocations_ef1, rfr=rfr, sf=sf)
+    adr_ef2, vol_ef2, sr_ef2, pv_ef2 = util.compute_returns(forecasts, allocations=allocations_ef2, rfr=rfr, sf=sf)
+    adr_ef3, vol_ef3, sr_ef3, pv_ef3 = util.compute_returns(forecasts, allocations=allocations_ef3, rfr=rfr, sf=sf)
+    adr_ef4, vol_ef4, sr_ef4, pv_ef4 = util.compute_returns(forecasts, allocations=allocations_ef4, rfr=rfr, sf=sf)
 
     print("Portfolios:", "Current", "Efficient")
     print("Daily return: %.5f %.5f %.5f %.5f %.5f" % (adr_curr, adr_ef1, adr_ef2, adr_ef3, adr_ef4))

@@ -1,5 +1,5 @@
 import pandas as pd
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 #import numpy as np
 import datetime as dt
 #from util import get_data, plot_data
@@ -117,6 +117,32 @@ def load_data(symbols, start, end, addSPY=True, colname = 'Close'):
             print(symbol, "no data found")
     return df
 
+def calc_daily_er(ers, sf=252):
+    return [er/(100*sf) for er in ers]
+
+def compute_returns(prices, allocations, sf=252.0, rfr=0.0):
+
+    expense_ratio = [0.01, 0.03, 0.09, 0.02, 0.03, 0.03, 0.88, 0.05]
+    daily_er = calc_daily_er(expense_ratio, 252)
+
+
+    # Normalize prices and calculate position values
+    prices_normalized = prices / prices.ix[0,:]
+    prices_normalized = prices_normalized - daily_er
+    position_values = prices_normalized * allocations
+
+    # Get daily portfolio value
+    portfolio_value = position_values.sum(axis=1)
+
+    daily_returns = portfolio_value.pct_change()
+    daily_returns = daily_returns[1:]
+
+
+    average_daily_return = daily_returns.mean()
+    volatility_daily_return = daily_returns.std()
+    sharpe_ratio = (sf**0.5) * (average_daily_return - rfr) / volatility_daily_return
+
+    return average_daily_return, volatility_daily_return, sharpe_ratio, portfolio_value
 
 def save_df_as_csv(df, foldername, filename, indexname=None):
 
@@ -174,7 +200,21 @@ def input_allocations():
     if allocations.sum() != 1.0:
         allocations /= allocations.sum()
 
+    allocations = pd.DataFrame(data=allocations, index=portfolio, columns=['Allocations']) #, index=)
+    allocations.index.name = 'Symbol'
+
+    save_df_as_csv(allocations, 'allocations', 'actual')
+
     return portfolio, allocations
+
+def plot_data(df, title="Stock prices", xlabel="Date", ylabel="Price"):
+    """Plot stock prices with a custom title and meaningful axis labels."""
+    ax = df.plot(title=title, fontsize=12)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.grid()
+    ax.grid(linestyle=':')
+    plt.show()
 
 if __name__ == "__main__":
 

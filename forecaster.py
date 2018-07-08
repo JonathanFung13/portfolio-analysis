@@ -42,7 +42,7 @@ def technical_indicators(start=dt.datetime(2015,1,1), end=dt.datetime(2017,1,1),
     prices.fillna(method='ffill', inplace=True)
     prices.fillna(method='bfill', inplace=True)
 
-    print('types', prices.dtypes)
+    #print('types', prices.dtypes)
 
     # Create Bollinger Bands & Volatility df
     rolling_mean = prices.rolling(window=n_days+1, center=False).mean()
@@ -252,34 +252,6 @@ def forecast(start=dt.datetime(2015,1,1), end=dt.datetime(2017,1,1), symbols=['A
     forecast_prices.index.name = 'Date'
 
     util.save_df_as_csv(forecast_prices, "forecasts", "day_%s_forecast" % (n_days))
-
-
-
-
-
-    # for symbol in symbols:
-    #     forecast_predY = grid.predict(forecast_x[symbol])
-    #     forecast_df = pd.DataFrame(data=forecast_predY, index=days, columns=['Return'])
-    #     forecast_df.index.name = 'Date'
-    #
-    #     try:
-    #         path = os.path.join("forecasts", "{}.csv".format(str(symbol)))
-    #         forecast_df.to_csv(path,sep=",",)
-    #     except TypeError:
-    #         print(symbol, "caused an error")
-
-
-
-
-
-            # with open(path,'w') as myfile:
-        #     out = csv.writer(myfile, delimiter=',')
-        #     out.writerow(['Date', 'Return'])
-        #     out.writerows(forecast_df)
-            # out.writerow(['Date','Symbol','Return'])
-            # for i, row in enumerate(forecast_predY):
-            #     day = end - dt.timedelta(days=(n_days-i))
-            #     out.writerow([day, symbol,row[0]])
 
     return forecast_dr
 
