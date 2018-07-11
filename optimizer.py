@@ -20,19 +20,6 @@ Read forecast, calculate daily prices, then calculate the portfolio stats and us
 
 """
 
-def load_forecasts(start, end, filename="day_21_forecast"):
-
-    #forecast_df = pd.DataFrame(index=pd.date_range(start, end))
-    path = os.path.join("forecasts", "{}.csv".format(filename))
-    forecast = pd.read_csv(path, index_col='Date', parse_dates=True)
-#        forecast_temp = forecast_temp.rename(columns={'Return': symbol})
-#        forecast_df = forecast_df.join(forecast_temp)
-
-    return forecast #_df.dropna()
-
-
-
-
 def optimize_return(forecasts, symbols=['AAPL', 'GOOG'],
                     allocations=[0.5,0.5], rfr=0.0, sf=252.0, gen_plot=False):
     """
@@ -49,31 +36,27 @@ def optimize_return(forecasts, symbols=['AAPL', 'GOOG'],
     # Get statistics for current allocations
     adr_curr, vol_curr, sr_curr, pv_curr = util.compute_returns(forecasts, allocations=allocations, rfr=rfr, sf=sf)
 
-    # Generate 500 random allocations
+    # Generate n random allocations
     num_allocations = 2000
-    adr = [None] * num_allocations
-    vol = [None] * num_allocations
-    sr = [None] * num_allocations
     iallocations = [None] * num_allocations
-    risk_at_max = 0.0
-    max_return = 0.0
-    sr_max = 0.0
-
     for i in range(num_allocations):
         weights = np.random.rand(len(symbols))
         iallocations[i] = weights / sum(weights)
 
+    # Generate allocations for 100% in each of the available funds
+    for i in range(len(symbols)):
+        temp_alloc = [0.0] * len(symbols)
+        temp_alloc[i] = 1.0
+        iallocations.append(temp_alloc)
 
+    num_allocations += len(symbols)
+    adr = [None] * num_allocations
+    vol = [None] * num_allocations
+    sr = [None] * num_allocations
 
-    # for i in range(num_allocations - len(symbols)):
-    #     weights = np.random.rand(len(symbols))
-    #     iallocations[i] = weights / sum(weights)
-    #
-    # for i in range(len(symbols)):
-    #     temp_alloc = [0.0] * len(symbols)
-    #     temp_alloc[i] = 1.0
-    #     j = num_allocations - len(symbols) + i
-    #     iallocations[j] = temp_alloc
+    risk_at_max = 100.0
+    max_return = -100.0
+    sr_max = -100.0
 
     #adr, vol, sr = map(compute_returns(), iallocations)
 
@@ -111,9 +94,6 @@ def optimize_return(forecasts, symbols=['AAPL', 'GOOG'],
 
     allocations_ef4 = np.sum([allocations_ef1, allocations_ef2, allocations_ef3], axis=0)
     allocations_ef4 = np.round(allocations_ef4 / 3, decimals=3)
-#    temp = np.array(allocations) * 0.8
-#    allocations_ef4 = np.sum([temp, allocations_ef4], axis=0)
-    #allocations_ef4 = iallocations[243]
 
     adr_ef1, vol_ef1, sr_ef1, pv_ef1 = util.compute_returns(forecasts, allocations=allocations_ef1, rfr=rfr, sf=sf)
     adr_ef2, vol_ef2, sr_ef2, pv_ef2 = util.compute_returns(forecasts, allocations=allocations_ef2, rfr=rfr, sf=sf)
@@ -137,10 +117,10 @@ def optimize_return(forecasts, symbols=['AAPL', 'GOOG'],
 
         fig, ax = plt.subplots()
         ax.scatter(vol, adr, c='blue', s=5, alpha=0.1)
-        ax.scatter(vol_curr, adr_curr, c='green', s=15, alpha=0.5) # Current portfolio
-        ax.scatter(vol_ef1, adr_ef1, c='red', s=15, alpha=0.5) # ef
-        ax.scatter(vol_ef2, adr_ef2, c='orange', s=15, alpha=0.5) # ef
-        ax.scatter(vol_ef3, adr_ef3, c='purple', s=15, alpha=0.5) # ef
+        ax.scatter(vol_curr, adr_curr, c='green', s=35, alpha=0.75) # Current portfolio
+        ax.scatter(vol_ef1, adr_ef1, c='red', s=35, alpha=0.5) # ef
+        ax.scatter(vol_ef2, adr_ef2, c='red', s=35, alpha=0.5) # ef
+        ax.scatter(vol_ef3, adr_ef3, c='red', s=35, alpha=0.5) # ef
         ax.scatter(vol_ef4, adr_ef4, c='black', s=25, alpha=0.75) # ef
         ax.set_xlabel('St. Dev. Daily Returns')
         ax.set_ylabel('Mean Daily Returns')
@@ -164,13 +144,10 @@ def optimize_return(forecasts, symbols=['AAPL', 'GOOG'],
     # # Add code here to properly compute end value
     # ev = investment * (1+cr)
 
-
-
     target_allocations = pd.DataFrame(data=allocations_ef4, index=symbols, columns=['Allocations']) #, index=)
     target_allocations.index.name = 'Symbol'
 
-
-    util.save_df_as_csv(target_allocations, 'allocations', 'target')
+    util.save_df_as_csv(target_allocations, 'allocations', 'target', 'Symbol')
 
     return allocations_ef4
 
@@ -192,14 +169,14 @@ if __name__ == "__main__":
 
     if useForecasts:
 
-        forecasts = load_forecasts(start_date, end_date)
+        forecasts = util.load_csv_as_df("forecasts", "day_21_forecast")
         target_allocations = optimize_return(forecasts, myport, allocations, gen_plot=True)
 
         print(target_allocations)
 
     else:
 
-        forecasts = load_forecasts(start_date, end_date, "fake_forecast")
+        forecasts = util.load_csv_as_df("forecasts", "fake_forecast") #"day_21_forecast")
         # n_days = 21
         #
         # prices = util.load_data(myfunds, start_date, end_date + dt.timedelta(days=n_days*2))

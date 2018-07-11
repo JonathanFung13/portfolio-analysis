@@ -6,32 +6,33 @@ import utilities as util
 
 
 def load_allocations():
-    actual_allocations = util.load_csv_as_df('allocations','actual', None)
-    target_allocations = util.load_csv_as_df('allocations','target', None)
+    actual_allocations = util.load_csv_as_df('allocations','actual', 'Symbol')
+    target_allocations = util.load_csv_as_df('allocations','target', 'Symbol')
 
     return actual_allocations, target_allocations
 
 
-def create_orders(actual, target, max_trade_size=0.10):
-    actual = pd.DataFrame(actual)
-    target = pd.DataFrame(target)
-    actual, target = load_allocations()
+def create_orders(symbols=['AAPL', 'GOOG'], actual=[0.5,0.5], target=[0.6,0.4], max_trade_size=0.10):
+    #actual = pd.DataFrame(actual)
+    #target = pd.DataFrame(target)
+    #tempa, tempt = actual, target
+    #actual, target = load_allocations()
 
     buy = []
     sell = []
 
     # First stab at creating orders, with a limit of 10% on biggest trade size
-    for i in range(actual.shape[0]):
+    for i in range(len(symbols)):
 
-        if actual.ix[i][1] > target.ix[i][1]:
-            delta = round(actual.ix[i][1] - target.ix[i][1], 3)
+        if actual[i] > target[i]:
+            delta = round(actual[i] - target[i], 3)
             delta = min(delta, max_trade_size)
-            change = [dt.date.today().strftime("%m/%d/%Y"), actual.ix[i][0], 'SELL', delta]
+            change = [dt.date.today().strftime("%m/%d/%Y"), symbols[i], 'SELL', delta]
             sell.append(change)
-        elif actual.ix[i][1] < target.ix[i][1]:
-            delta = round(target.ix[i][1] - actual.ix[i][1], 3)
+        elif actual[i] < target[i]:
+            delta = round(target[i] - actual[i], 3)
             delta = min(delta, max_trade_size)
-            change = [dt.date.today().strftime("%m/%d/%Y"), actual.ix[i][0], 'BUY', delta] #, columns=cols)
+            change = [dt.date.today().strftime("%m/%d/%Y"), symbols[i], 'BUY', delta] #, columns=cols)
             buy.append(change)
 
 
