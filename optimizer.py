@@ -21,7 +21,7 @@ Read forecast, calculate daily prices, then calculate the portfolio stats and us
 """
 
 def optimize_return(forecasts, symbols=['AAPL', 'GOOG'],
-                    allocations=[0.5,0.5], rfr=0.0, sf=252.0, gen_plot=False):
+                    allocations=[0.5,0.5], rfr=0.0, sf=252.0, gen_plot=False, verbose=False):
     """
     Plot return versus risk for current allocations as well as 500 random allocations.
     Plot return versus risk for each scenario and return the one with the optimal return.
@@ -100,17 +100,18 @@ def optimize_return(forecasts, symbols=['AAPL', 'GOOG'],
     adr_ef3, vol_ef3, sr_ef3, pv_ef3 = util.compute_returns(forecasts, allocations=allocations_ef3, rfr=rfr, sf=sf)
     adr_ef4, vol_ef4, sr_ef4, pv_ef4 = util.compute_returns(forecasts, allocations=allocations_ef4, rfr=rfr, sf=sf)
 
-    print("Portfolios:", "Current", "Efficient")
-    print("Daily return: %.5f %.5f %.5f %.5f %.5f" % (adr_curr, adr_ef1, adr_ef2, adr_ef3, adr_ef4))
-    print("Daily Risk: %.5f %.5f %.5f %.5f %.5f" % (vol_curr, vol_ef1, vol_ef2, vol_ef3, vol_ef4))
-    print("Sharpe Ratio: %.5f %.5f %.5f %.5f %.5f" % (sr_curr, sr_ef1, sr_ef2, sr_ef3, sr_ef4))
-    print("Return vs Risk: %.5f %.5f %.5f %.5f %.5f" % (adr_curr/vol_curr, adr_ef1/vol_ef1, adr_ef2/vol_ef2,
-                                                        adr_ef3/vol_ef3, adr_ef4/vol_ef4))
-    print("\nALLOCATIONS\n" + "-" * 40)
-    print("", "Current", "Efficient")
-    for i, symbol in enumerate(symbols):
-        print("%s %.3f %.3f %.3f %.3f %.3f" %
-              (symbol, allocations[i], allocations_ef1[i], allocations_ef2[i], allocations_ef3[i], allocations_ef4[i]))
+    if verbose:
+        print("Portfolios:", "Current", "Efficient")
+        print("Daily return: %.5f %.5f %.5f %.5f %.5f" % (adr_curr, adr_ef1, adr_ef2, adr_ef3, adr_ef4))
+        print("Daily Risk: %.5f %.5f %.5f %.5f %.5f" % (vol_curr, vol_ef1, vol_ef2, vol_ef3, vol_ef4))
+        print("Sharpe Ratio: %.5f %.5f %.5f %.5f %.5f" % (sr_curr, sr_ef1, sr_ef2, sr_ef3, sr_ef4))
+        print("Return vs Risk: %.5f %.5f %.5f %.5f %.5f" % (adr_curr/vol_curr, adr_ef1/vol_ef1, adr_ef2/vol_ef2,
+                                                            adr_ef3/vol_ef3, adr_ef4/vol_ef4))
+        print("\nALLOCATIONS\n" + "-" * 40)
+        print("", "Current", "Efficient")
+        for i, symbol in enumerate(symbols):
+            print("%s %.3f %.3f %.3f %.3f %.3f" %
+                  (symbol, allocations[i], allocations_ef1[i], allocations_ef2[i], allocations_ef3[i], allocations_ef4[i]))
 
     # Compare daily portfolio value with SPY using a normalized plot
     if gen_plot:

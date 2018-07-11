@@ -12,26 +12,22 @@ def calc_start_date(end_date=dt.datetime(2017,1,1), data_size=12):
 
 def run_today(start_date=dt.datetime(2015,1,1), end_date=dt.datetime(2017,1,1), n_days=21, data_size=12,
               myport=['AAPL', 'GOOG'], allocations=[0.5,0.5],
-              train_size=0.7, max_k=50, max_trade_size=0.1, gen_plot=False):
+              train_size=0.7, max_k=50, max_trade_size=0.1, gen_plot=False, verbose=False):
 
 
     start_date = calc_start_date(end_date, data_size)#end_date - dt.timedelta(weeks=int(data_size * 52/12))
 
-    #myport, allocations = util.verify_allocations()
-
-
-    print('-'*20 + '\nFORECAST\n' + '-'*20)
+    if verbose: print('-'*20 + '\nFORECAST\n' + '-'*20)
     forecast = fc.forecast(start_date, end_date, symbols=myport, train_size=train_size,
                            n_days=n_days, max_k=max_k, gen_plot=gen_plot)
 
-    print('\n'+'-'*20 + '\nOPTIMIZE\n' + '-'*20)
+    if verbose: print('\n'+'-'*20 + '\nOPTIMIZE\n' + '-'*20)
     target_allocations = opt.optimize_return(forecast, myport, allocations, gen_plot=gen_plot)
 
-    print('\n' + '-'*20 + '\nORDERS\n' + '-'*20)
-    #allocations = pd.DataFrame(data=allocations, index=myport, columns=['Allocations'])
-    orders = td.create_orders(myport, allocations, target_allocations, max_trade_size=max_trade_size)
+    if verbose: print('\n' + '-'*20 + '\nORDERS\n' + '-'*20)
+    orders = td.create_orders(myport, allocations, target_allocations, trade_date=end_date,max_trade_size=max_trade_size)
 
-    print(orders)
+    if verbose: print(orders)
 
     new_allocations = allocations.copy()
     for i in range(orders.shape[0]):
@@ -49,19 +45,20 @@ def run_today(start_date=dt.datetime(2015,1,1), end_date=dt.datetime(2017,1,1), 
     adr_target, vol_target, sr_target, pv_target = util.compute_returns(forecast, allocations=target_allocations)
     adr_new, vol_new, sr_new, pv_new = util.compute_returns(forecast, allocations=new_allocations)
 
-    print("Portfolios:", "Current", "Target","New")
-    print("Daily return: %.5f %.5f %.5f" % (adr_current, adr_target, adr_new))
-    print("Daily Risk: %.5f %.5f %.5f" % (vol_current, vol_target, vol_new))
-    print("Sharpe Ratio: %.5f %.5f %.5f" % (sr_current, sr_target, sr_new))
-    print("Return vs Risk: %.5f %.5f %.5f" % (adr_current/vol_current, adr_target/vol_target, adr_new/vol_new))
-    print("\nALLOCATIONS\n" + "-" * 40)
-    print("Symbol", "Current", "Target", 'New')
-    for i, symbol in enumerate(myport):
-        print("%s %.3f %.3f %.3f" %
-              (symbol, allocations[i], target_allocations[i], new_allocations[i]))
+    if verbose:
+        print("Portfolios:", "Current", "Target","New")
+        print("Daily return: %.5f %.5f %.5f" % (adr_current, adr_target, adr_new))
+        print("Daily Risk: %.5f %.5f %.5f" % (vol_current, vol_target, vol_new))
+        print("Sharpe Ratio: %.5f %.5f %.5f" % (sr_current, sr_target, sr_new))
+        print("Return vs Risk: %.5f %.5f %.5f" % (adr_current/vol_current, adr_target/vol_target, adr_new/vol_new))
+        print("\nALLOCATIONS\n" + "-" * 40)
+        print("Symbol", "Current", "Target", 'New')
+        for i, symbol in enumerate(myport):
+            print("%s %.3f %.3f %.3f" %
+                  (symbol, allocations[i], target_allocations[i], new_allocations[i]))
 
     # Compare daily portfolio value with SPY using a normalized plot
-    if gen_plot or True:
+    if gen_plot or False:
 
         fig, ax = plt.subplots()
         ax.scatter(vol_current, adr_current, c='green', s=15, alpha=0.5) # Current portfolio
@@ -108,10 +105,10 @@ def run_today(start_date=dt.datetime(2015,1,1), end_date=dt.datetime(2017,1,1), 
         df_temp = df_temp / df_temp.ix[0, :]
         util.plot_data(df_temp, 'Daily portfolio value and SPY', 'Date', 'Normalized Price')
 
-    return adr_new, vol_new, sr_new, pv_new, new_allocations
+    return new_allocations, orders
 
 def test_experiment_one(n_days=21, data_size=12, train_size=0.7, max_k=50, max_trade_size=0.1,
-                        years_to_go_back=2, gen_plot=False):
+                        years_to_go_back=2, initial_investment=10000, gen_plot=False, verbose=False):
 
     today = dt.date.today()
     yr = today.year - years_to_go_back
@@ -134,38 +131,73 @@ def test_experiment_one(n_days=21, data_size=12, train_size=0.7, max_k=50, max_t
     actual_prices = util.load_data(myport, end_date, end_date+dt.timedelta(weeks=data_size*52/12))
     actual_prices.fillna(method='ffill', inplace=True)
     actual_prices.fillna(method='bfill', inplace=True)
+    prices_SPY = actual_prices['SPY']
+    actual_prices = actual_prices[myport]
 
-    adr, vol, sharpe, actual_pv = util.compute_returns(actual_prices, myalloc, sf=252.0, rfr=0.0)
+    adr_cons, vol_cons, sharpe_cons, pv_cons = util.compute_returns(actual_prices, myalloc, sf=252.0, rfr=0.0)
 
     # Portfolio values with monthly optimization using hindsight (best possible case)
 
 
     # Portfolio values for Machine Learner
 
-    ml_pv = []
+    ml_allocs = []
+    ml_trade_dates = []
 
-    for i in range(12):
+    for i in range(int(252/n_days)):
         test_date = end_date + dt.timedelta(weeks=int((i)*52/12))
 
-        print(('EXPERIMENT %i - %s') % (i, str(test_date.strftime("%m/%d/%Y"))))
+        if verbose: print(('EXPERIMENT %i - %s') % (i, str(test_date.strftime("%m/%d/%Y"))))
 
-        adr[i], vol[i], sr[i], pv_forecast, myalloc = run_today(end_date=test_date, n_days=n_days, data_size=data_size,
+        myalloc, orders = run_today(end_date=test_date, n_days=n_days, data_size=data_size,
                                                        myport=myport, allocations=myalloc,
                                                        train_size=train_size, max_k=max_k,
                                                        max_trade_size=max_trade_size, gen_plot=gen_plot)
 
+        ml_allocs.append(myalloc)
+        ml_trade_dates.append(test_date)
 
 
+    ml_allocations = pd.DataFrame(data=ml_allocs, index=ml_trade_dates, columns=myport)
+    all_dates = actual_prices.index
+    #ml_allocaations = ml_allocaations.reindex(all_dates, method='ffill')
+
+    actual_prices['Cash'] = 1.0
+
+    ml_holdings = pd.DataFrame(data=0.0, index=all_dates, columns=myport)
+    ml_holdings['Cash'] = 0.0
+    ml_holdings.ix[0,'Cash'] = initial_investment
+    values = ml_holdings * actual_prices
+    porvals = values.sum(axis=1)
+
+    for index, allocation in ml_allocations.iterrows():
+        tomorrow = ml_holdings.index.get_loc(index) + 1
+
+        for symbol in myport:
+            ml_holdings.ix[tomorrow:, symbol] = porvals.ix[index] * allocation[symbol] / actual_prices.ix[index,symbol]
+
+        values = ml_holdings * actual_prices
+        porvals = values.sum(axis=1)
 
 
+    if gen_plot:
+        # add code to plot here
+        df_temp = pd.concat([pv_cons, porvals, prices_SPY], keys=['Conservative', 'ML', 'SPY'],
+                            axis=1)
+        df_temp = df_temp / df_temp.ix[0, :]
+        util.plot_data(df_temp, 'Daily portfolio value and SPY', 'Date', 'Normalized Price')
 
-    print(adr, vol, sr)
+    ret_cons = (pv_cons[-1] / pv_cons[0]) - 1
+    ret_porvals = (porvals[-1] / porvals[0]) - 1
+    ret_SPY = (prices_SPY[-1] / prices_SPY[0]) - 1
 
-
+    return ret_cons, ret_porvals, ret_SPY
 
 if __name__ == "__main__":
 
     test = True
+
+    initial_investment = 10000 # dollars invested from start
 
     today = dt.date.today()
     yr = today.year
@@ -198,8 +230,30 @@ if __name__ == "__main__":
         max_k = 5  # Maximum value of k for kNN
         max_trade_size = 0.10  # Maximum amount of allocation allowed in a trade
 
-        years_to_go_back = 2
+        years_to_go_back = 3
 
-        test_experiment_one(n_days=n_days, data_size=data_size, train_size=train_size, max_k=max_k,
-                            max_trade_size=max_trade_size, years_to_go_back=years_to_go_back, gen_plot=True)
+        n_days = [7, 14, 21]  # How long the forecast should look out
+        data_size = [12, 24]  # Number of months of data to use for Machine Learning
+        train_size = [0.5, 0.6, 0.7, 0.8, 0.9]  # Percentage of data used for training, rest is test
+        max_k = [5, 10, 15, 20, 25]  # Maximum value of k for kNN
+        max_trade_size = [0.25, 0.50, 0.75]  # Maximum amount of allocation allowed in a trade
+
+        years_to_go_back = [3, 2, 1]
+
+        for year in years_to_go_back:
+            for mts in max_trade_size:
+                for k in max_k:
+                    for t in train_size:
+                        for d in data_size:
+                            for n in n_days:
+
+                                one, two, three = test_experiment_one(n_days=n, data_size=d, train_size=t, max_k=k,
+                                            max_trade_size=mts, years_to_go_back=year, gen_plot=False)
+
+                                print(one, two, three, n, d, t, k, mts, year)
+
+
+
+                        #test_experiment_one(n_days=n_days, data_size=data_size, train_size=train_size, max_k=max_k,
+        #                    max_trade_size=max_trade_size, years_to_go_back=years_to_go_back, gen_plot=False)
 

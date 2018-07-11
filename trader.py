@@ -12,7 +12,8 @@ def load_allocations():
     return actual_allocations, target_allocations
 
 
-def create_orders(symbols=['AAPL', 'GOOG'], actual=[0.5,0.5], target=[0.6,0.4], max_trade_size=0.10):
+def create_orders(symbols=['AAPL', 'GOOG'], actual=[0.5,0.5], target=[0.6,0.4], trade_date=dt.date.today(),
+                  max_trade_size=0.10, verbose=False):
     #actual = pd.DataFrame(actual)
     #target = pd.DataFrame(target)
     #tempa, tempt = actual, target
@@ -27,12 +28,12 @@ def create_orders(symbols=['AAPL', 'GOOG'], actual=[0.5,0.5], target=[0.6,0.4], 
         if actual[i] > target[i]:
             delta = round(actual[i] - target[i], 3)
             delta = min(delta, max_trade_size)
-            change = [dt.date.today().strftime("%m/%d/%Y"), symbols[i], 'SELL', delta]
+            change = [trade_date.strftime("%m/%d/%Y"), symbols[i], 'SELL', delta]
             sell.append(change)
         elif actual[i] < target[i]:
             delta = round(target[i] - actual[i], 3)
             delta = min(delta, max_trade_size)
-            change = [dt.date.today().strftime("%m/%d/%Y"), symbols[i], 'BUY', delta] #, columns=cols)
+            change = [trade_date.strftime("%m/%d/%Y"), symbols[i], 'BUY', delta] #, columns=cols)
             buy.append(change)
 
 

@@ -36,7 +36,7 @@ def melt_indicators(indicator):
     return pd.melt(indicator)
 
 def technical_indicators(start=dt.datetime(2015,1,1), end=dt.datetime(2017,1,1), symbols=['AAPL', 'GOOG'],
-                         train_size = 0.7, n_days=21, gen_plot=False):
+                         train_size = 0.7, n_days=21, gen_plot=False, verbose=False):
 
     prices = util.load_data(symbols, start, end)
     prices.fillna(method='ffill', inplace=True)
@@ -108,7 +108,7 @@ def technical_indicators(start=dt.datetime(2015,1,1), end=dt.datetime(2017,1,1),
 
     return bb, rolling_std, momentum, psma, y
 
-def split_data(bb, rolling_std, momentum, psma, y, train_size=0.7, n_days=21):
+def split_data(bb, rolling_std, momentum, psma, y, train_size=0.7, n_days=21, verbose=False):
 
     # Calculate mean and standard deviation for each indicator in preparation to standardize them
     bb_mean = bb.stack().mean(skipna=True)
@@ -165,7 +165,7 @@ def split_data(bb, rolling_std, momentum, psma, y, train_size=0.7, n_days=21):
     return train_x, test_x, forecast_x, train_y, test_y
 
 def forecast(start=dt.datetime(2015,1,1), end=dt.datetime(2017,1,1), symbols=['AAPL', 'GOOG'],
-             train_size = 0.7, n_days=21, max_k=20, gen_plot=False):
+             train_size = 0.7, n_days=21, max_k=20, gen_plot=False, verbose=False):
 
     # Load the technical indicators
     bb, rolling_std, momentum, psma, y = technical_indicators(start=start, end=end, symbols=symbols,
@@ -221,13 +221,14 @@ def forecast(start=dt.datetime(2015,1,1), end=dt.datetime(2017,1,1), symbols=['A
 
 
     # evaluate the best grid searched model on the testing data
-    print("[INFO] grid search took {:.2f} seconds".format(end_timer))
-    acc = grid.score(test_x, test_y)
-    print("[INFO] grid search accuracy: {:.2f}%".format(acc * 100))
-    print("[INFO] grid search best parameters: {}".format(
-        grid.best_params_))
-    print("[Training Error] %.2f" % (train_RMSE))
-    print("[Test Error] %.2f" % (test_RMSE))
+    if verbose:
+        print("[INFO] grid search took {:.2f} seconds".format(end_timer))
+        acc = grid.score(test_x, test_y)
+        print("[INFO] grid search accuracy: {:.2f}%".format(acc * 100))
+        print("[INFO] grid search best parameters: {}".format(
+            grid.best_params_))
+        print("[Training Error] %.2f" % (train_RMSE))
+        print("[Test Error] %.2f" % (test_RMSE))
 
     days = bb.index[-n_days:] #pd.date_range(end - dt.timedelta(days=n_days-1), end) #bb.index[-n_days:]
     future = pd.date_range(end + dt.timedelta(days=-n_days+1), end)
