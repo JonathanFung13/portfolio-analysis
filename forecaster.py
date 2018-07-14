@@ -165,7 +165,7 @@ def split_data(bb, rolling_std, momentum, psma, y, train_size=0.7, n_days=21, ve
     return train_x, test_x, forecast_x, train_y, test_y
 
 def forecast(start=dt.datetime(2015,1,1), end=dt.datetime(2017,1,1), symbols=['AAPL', 'GOOG'],
-             train_size = 0.7, n_days=21, max_k=20, gen_plot=False, verbose=False):
+             train_size = 0.7, n_days=21, max_k=20, gen_plot=False, verbose=False, savelogs=False):
 
     # Load the technical indicators
     bb, rolling_std, momentum, psma, y = technical_indicators(start=start, end=end, symbols=symbols,
@@ -181,19 +181,21 @@ def forecast(start=dt.datetime(2015,1,1), end=dt.datetime(2017,1,1), symbols=['A
               'weights': ['uniform', 'distance'], \
               'p': [1, 2]}
 
-    classifier = KNeighborsRegressor()  # n_neighbors=n_neighbors, algorithm=algorithm)
-
-    # grid = RandomizedSearchCV(classifier, params)
-    grid = GridSearchCV(classifier, params)
+    classifier = KNeighborsRegressor(n_neighbors=max_k) #, algorithm=algorithm)
 
     start_timer = time.time()
-
-    grid.fit(train_x, train_y)
+    if False:
+        # grid = RandomizedSearchCV(classifier, params)
+        grid = GridSearchCV(classifier, params)
+        grid.fit(train_x, train_y)
+        train_predY = grid.predict(train_x)
+        test_predY = grid.predict(test_x)
+    else:
+        classifier.fit(train_x, train_y)
+        train_predY = classifier.predict(train_x)
+        test_predY = classifier.predict(test_x)
 
     end_timer = time.time() - start_timer
-
-    train_predY = grid.predict(train_x)
-    test_predY = grid.predict(test_x)
 
     if gen_plot:
 
@@ -223,10 +225,10 @@ def forecast(start=dt.datetime(2015,1,1), end=dt.datetime(2017,1,1), symbols=['A
     # evaluate the best grid searched model on the testing data
     if verbose:
         print("[INFO] grid search took {:.2f} seconds".format(end_timer))
-        acc = grid.score(test_x, test_y)
-        print("[INFO] grid search accuracy: {:.2f}%".format(acc * 100))
-        print("[INFO] grid search best parameters: {}".format(
-            grid.best_params_))
+        #acc = grid.score(test_x, test_y)
+        #print("[INFO] grid search accuracy: {:.2f}%".format(acc * 100))
+        #print("[INFO] grid search best parameters: {}".format(
+        #    grid.best_params_))
         print("[Training Error] %.2f" % (train_RMSE))
         print("[Test Error] %.2f" % (test_RMSE))
 
@@ -234,7 +236,7 @@ def forecast(start=dt.datetime(2015,1,1), end=dt.datetime(2017,1,1), symbols=['A
     future = pd.date_range(end + dt.timedelta(days=-n_days+1), end)
     forecast_dr = pd.DataFrame(index=days)
     for symbol in symbols:
-        forecast_predY = pd.DataFrame(data=grid.predict(forecast_x[symbol]), columns={symbol}, index=days)
+        forecast_predY = pd.DataFrame(data=classifier.predict(forecast_x[symbol]), columns={symbol}, index=days)
 
 #        forecast_temp = forecast_temp.rename(columns={'Return': symbol})
         forecast_dr = forecast_dr.join(forecast_predY)
@@ -242,17 +244,16 @@ def forecast(start=dt.datetime(2015,1,1), end=dt.datetime(2017,1,1), symbols=['A
         #forecast_df = forecast_df.dropna()
 
     forecast_dr = forecast_dr + 1.0
-    first = bb.index[-n_days]
 
-    prices = util.load_data(symbols, first, end)
-    prices.fillna(method='ffill', inplace=True)
-    prices.fillna(method='bfill', inplace=True)
-    prices = prices[symbols]
-
-    forecast_prices = forecast_dr * prices
-    forecast_prices.index.name = 'Date'
-
-    util.save_df_as_csv(forecast_prices, "forecasts", "day_%s_forecast" % (n_days))
+    if savelogs:
+        first = bb.index[-n_days]
+        prices = util.load_data(symbols, first, end)
+        prices.fillna(method='ffill', inplace=True)
+        prices.fillna(method='bfill', inplace=True)
+        prices = prices[symbols]
+        forecast_prices = forecast_dr * prices
+        forecast_prices.index.name = 'Date'
+        util.save_df_as_csv(forecast_prices, "forecasts", "day_%s_forecast" % (n_days))
 
     return forecast_dr
 

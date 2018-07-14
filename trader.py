@@ -13,7 +13,7 @@ def load_allocations():
 
 
 def create_orders(symbols=['AAPL', 'GOOG'], actual=[0.5,0.5], target=[0.6,0.4], trade_date=dt.date.today(),
-                  max_trade_size=0.10, verbose=False):
+                  max_trade_size=0.10, verbose=False, savelogs=False):
     #actual = pd.DataFrame(actual)
     #target = pd.DataFrame(target)
     #tempa, tempt = actual, target
@@ -72,11 +72,14 @@ def create_orders(symbols=['AAPL', 'GOOG'], actual=[0.5,0.5], target=[0.6,0.4], 
     orders = pd.concat([sell, buy], axis=0, ignore_index=True)
     orders['Quantity'] = np.round(orders['Quantity'], 3)
 
-    all_orders = util.load_csv_as_df('orders', 'orders', 'Trade_Num')
-    #all_orders.set_index(ind)
-    all_orders = pd.concat([all_orders, orders], axis=0, ignore_index=True)
 
-    util.save_df_as_csv(all_orders, 'orders', 'orders', 'Trade_Num')
+    if savelogs:
+
+        all_orders = util.load_csv_as_df('orders', 'orders', 'Trade_Num')
+        #all_orders.set_index(ind)
+        all_orders = pd.concat([all_orders, orders], axis=0, ignore_index=True)
+
+        util.save_df_as_csv(all_orders, 'orders', 'orders', 'Trade_Num')
 
 
     return orders

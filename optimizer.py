@@ -21,7 +21,7 @@ Read forecast, calculate daily prices, then calculate the portfolio stats and us
 """
 
 def optimize_return(forecasts, symbols=['AAPL', 'GOOG'],
-                    allocations=[0.5,0.5], rfr=0.0, sf=252.0, gen_plot=False, verbose=False):
+                    allocations=[0.5,0.5], rfr=0.0, sf=252.0, gen_plot=False, verbose=False, savelogs=False):
     """
     Plot return versus risk for current allocations as well as 500 random allocations.
     Plot return versus risk for each scenario and return the one with the optimal return.
@@ -145,10 +145,11 @@ def optimize_return(forecasts, symbols=['AAPL', 'GOOG'],
     # # Add code here to properly compute end value
     # ev = investment * (1+cr)
 
-    target_allocations = pd.DataFrame(data=allocations_ef4, index=symbols, columns=['Allocations']) #, index=)
-    target_allocations.index.name = 'Symbol'
+    if savelogs:
+        target_allocations = pd.DataFrame(data=allocations_ef4, index=symbols, columns=['Allocations']) #, index=)
+        target_allocations.index.name = 'Symbol'
 
-    util.save_df_as_csv(target_allocations, 'allocations', 'target', 'Symbol')
+        util.save_df_as_csv(target_allocations, 'allocations', 'target', 'Symbol')
 
     return allocations_ef4
 

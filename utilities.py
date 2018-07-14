@@ -43,46 +43,44 @@ def request_json(url):
     resp_json = requests.get(url).text
     return json.loads(resp_json)
 
-def extract_stocks(symbols, start, end, addSPY=True): #, colname = 'Close'):
+def extract_stocks(symbol, start, end):
     # Read historical price data from IEX
     # https://pandas-datareader.readthedocs.io/en/latest/remote_data.html
     df = pd.DataFrame(index=pd.date_range(start, end))
-    if addSPY and 'SPY' not in symbols: # add SPY for reference, if absent
-        symbols = ['SPY'] + symbols
 
-    for symbol in symbols:
-        try:
-            data = web.DataReader(symbol, 'morningstar', start, end)
-            path = os.path.join("data", "{}.csv".format(str(symbol)))
-            data.to_csv(path,sep=",",)
-        except TypeError:
-            print(symbol, "caused an error")
+    try:
+        data = web.DataReader(symbol, 'morningstar', start, end)
+        data.index = data.index.droplevel(level=0)
+
+        #path = os.path.join("data", "{}.csv".format(str(symbol)))
+        #data.to_csv(path,sep=",",)
+    except TypeError:
+        print(symbol, "caused an error")
     return data
 
-def extract_vanguard(symbols, start, end):
+def extract_vanguard(symbol, start, end):
 
     duration = str((end - start).days)
     start = start.strftime("%m/%d/%Y")
     end = end.strftime("%m/%d/%Y")
 
-    for symbol in symbols:
+    code = vanguard_code(symbol)
 
-        code = vanguard_code(symbol)
+    url = "https://advisors.vanguard.com/web/c1/fas-investmentproducts/model.json?paths=[[%27fundReports%27," + \
+          code + ",%27price%27,%27fund,etf,vvif%27,[%27to_dt=" + end + ",from_dt=" + start + ",maxDuration=" + \
+          duration + "%27,%27to_dt=" + end + ",from_dt=" + start + "%27]]]&method=get"
 
-        url = "https://advisors.vanguard.com/web/c1/fas-investmentproducts/model.json?paths=[[%27fundReports%27," + \
-              code + ",%27price%27,%27fund,etf,vvif%27,[%27to_dt=" + end + ",from_dt=" + start + ",maxDuration=" + \
-              duration + "%27,%27to_dt=" + end + ",from_dt=" + start + "%27]]]&method=get"
+    json = request_json(url)
+    subjson = json['jsonGraph']['fundReports'][code]['price']['value']['price']
 
-        json = request_json(url)
-        subjson = json['jsonGraph']['fundReports'][code]['price']['value']['price']
+    data = pd.DataFrame(data=subjson)
+    data = data.rename(columns={'amt': 'Close', 'asOfDt': 'Date'})
+    data = data.set_index('Date')
+    data = data.sort_index()
+    data.index = data.index.to_datetime()
 
-        data = pd.DataFrame(data=subjson)
-        data = data.rename(columns={'amt': 'Close', 'asOfDt': 'Date'})
-        data = data.set_index('Date')
-        data = data.sort_index()
-
-        path = os.path.join("data", "{}.csv".format(str(symbol)))
-        data.to_csv(path, sep=",",)
+    #path = os.path.join("data", "{}.csv".format(str(symbol)))
+    #data.to_csv(path, sep=",",)
 
 
     return data
@@ -95,26 +93,32 @@ def load_data(symbols, start, end, addSPY=True, colname = 'Close'):
     for symbol in symbols:
         try:
             path = os.path.join("data", "{}.csv".format(str(symbol)))
-            df_temp = pd.read_csv(path, index_col='Date', parse_dates=True, usecols=['Date', colname],
+            df_temp = pd.read_csv(path, index_col='Date', parse_dates=True, #usecols=['Date', colname],
                                   na_values=['nan', 'null'])
-
-            # If data files are missing data, redownload the whole range of data.
-            if df_temp.index.max() < end: # or df_temp.index.min() > start:
-                print("need data")
-                if vanguard_code(symbol) != -1:
-                    df_temp = extract_vanguard([symbol], start, end)
-                else:
-                    df_temp = extract_stocks(symbols, start, end)
-                #df_temp = pd.to_numeric(df_temp, errors='coerce')
-                df_temp = df_temp[colname].to_frame()
-
-            df_temp = df_temp.rename(columns={colname: symbol})
-
-            df = df.join(df_temp)
-            if symbol == 'SPY': # drop dates SPY did not trade
-                df = df.dropna(subset=["SPY"])
         except FileNotFoundError:
             print(symbol, "no data found")
+
+        # If data files are missing data, redownload the whole range of data.
+        if df_temp.index.max() < end: # or df_temp.index.min() > start:
+            print("need data")
+            if vanguard_code(symbol) != -1:
+                df_temp2 = extract_vanguard(symbol, df_temp.index.max()+dt.timedelta(days=1), end)
+            else:
+                df_temp2 = extract_stocks(symbol, df_temp.index.max()+dt.timedelta(days=1), end)
+
+            df_temp = pd.concat([df_temp, df_temp2], axis=0)
+            save_df_as_csv(df_temp, 'data', symbol, 'Date')
+
+        if 'Adj Close' in df_temp.columns:
+            colname = 'Adj Close'
+        else:
+            colname = 'Close'
+
+        df_temp = df_temp[colname].to_frame()
+        df_temp = df_temp.rename(columns={colname: symbol})
+        df = df.join(df_temp)
+        if symbol == 'SPY': # drop dates SPY did not trade
+            df = df.dropna(subset=["SPY"])
     return df
 
 def calc_daily_er(ers, sf=252):
