@@ -92,7 +92,7 @@ def load_data(symbols, start, end, addSPY=True, colname = 'Close'):
 
     for symbol in symbols:
         try:
-            path = os.path.join("data", "{}.csv".format(str(symbol)))
+            path = os.path.join("prices", "{}.csv".format(str(symbol)))
             df_temp = pd.read_csv(path, index_col='Date', parse_dates=True, #usecols=['Date', colname],
                                   na_values=['nan', 'null'])
         except FileNotFoundError:
@@ -107,7 +107,7 @@ def load_data(symbols, start, end, addSPY=True, colname = 'Close'):
                 df_temp2 = extract_stocks(symbol, df_temp.index.max()+dt.timedelta(days=1), end)
 
             df_temp = pd.concat([df_temp, df_temp2], axis=0)
-            save_df_as_csv(df_temp, 'data', symbol, 'Date')
+            save_df_as_csv(df_temp, 'prices', symbol, 'Date')
 
         if 'Adj Close' in df_temp.columns:
             colname = 'Adj Close'

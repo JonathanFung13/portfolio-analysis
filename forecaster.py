@@ -253,7 +253,7 @@ def forecast(start=dt.datetime(2015,1,1), end=dt.datetime(2017,1,1), symbols=['A
         prices = prices[symbols]
         forecast_prices = forecast_dr * prices
         forecast_prices.index.name = 'Date'
-        util.save_df_as_csv(forecast_prices, "forecasts", "day_%s_forecast" % (n_days))
+        util.save_df_as_csv(forecast_prices, "logs", "day_%s_forecast" % (n_days))
 
     return forecast_dr
 

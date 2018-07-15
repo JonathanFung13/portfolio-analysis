@@ -6,8 +6,8 @@ import utilities as util
 
 
 def load_allocations():
-    actual_allocations = util.load_csv_as_df('allocations','actual', 'Symbol')
-    target_allocations = util.load_csv_as_df('allocations','target', 'Symbol')
+    actual_allocations = util.load_csv_as_df('logs','actual', 'Symbol')
+    target_allocations = util.load_csv_as_df('logs','target', 'Symbol')
 
     return actual_allocations, target_allocations
 
@@ -75,11 +75,11 @@ def create_orders(symbols=['AAPL', 'GOOG'], actual=[0.5,0.5], target=[0.6,0.4], 
 
     if savelogs:
 
-        all_orders = util.load_csv_as_df('orders', 'orders', 'Trade_Num')
+        all_orders = util.load_csv_as_df('logs', 'orders', 'Trade_Num')
         #all_orders.set_index(ind)
         all_orders = pd.concat([all_orders, orders], axis=0, ignore_index=True)
 
-        util.save_df_as_csv(all_orders, 'orders', 'orders', 'Trade_Num')
+        util.save_df_as_csv(all_orders, 'logs', 'orders', 'Trade_Num')
 
 
     return orders

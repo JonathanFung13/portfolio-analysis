@@ -149,7 +149,7 @@ def optimize_return(forecasts, symbols=['AAPL', 'GOOG'],
         target_allocations = pd.DataFrame(data=allocations_ef4, index=symbols, columns=['Allocations']) #, index=)
         target_allocations.index.name = 'Symbol'
 
-        util.save_df_as_csv(target_allocations, 'allocations', 'target', 'Symbol')
+        util.save_df_as_csv(target_allocations, 'logs', 'target', 'Symbol')
 
     return allocations_ef4
 
