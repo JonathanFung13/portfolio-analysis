@@ -99,7 +99,7 @@ def load_data(symbols, start, end, addSPY=True, colname = 'Close'):
             print(symbol, "no data found")
 
         # If data files are missing data, redownload the whole range of data.
-        if df_temp.index.max() < end: # or df_temp.index.min() > start:
+        if (end - df_temp.index.max()).days > 1: # and end.weekday() < 5: # or df_temp.index.min() > start:
             print("need data")
             if vanguard_code(symbol) != -1:
                 df_temp2 = extract_vanguard(symbol, df_temp.index.max()+dt.timedelta(days=1), end)
@@ -119,6 +119,8 @@ def load_data(symbols, start, end, addSPY=True, colname = 'Close'):
         df = df.join(df_temp)
         if symbol == 'SPY': # drop dates SPY did not trade
             df = df.dropna(subset=["SPY"])
+            start = df.index.min()
+            end = df.index.max()
     return df
 
 def calc_daily_er(ers, sf=252):

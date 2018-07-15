@@ -220,7 +220,7 @@ def test_experiment_one(n_days=21, data_size=12, train_size=0.7, max_k=50, max_t
 
 if __name__ == "__main__":
 
-    test = False
+    test = True
 
     initial_investment = 10000 # dollars invested from start
 
@@ -238,9 +238,9 @@ if __name__ == "__main__":
 
         n_days = 21 # How long the forecast should look out
         data_size = 12 # Number of months of data to use for Machine Learning
-        train_size = 0.70 # Percentage of data used for training, rest is test
-        max_k = 50 # Maximum value of k for kNN
-        max_trade_size= 0.25 # Maximum amount of allocation allowed in a trade
+        train_size = 0.60 # Percentage of data used for training, rest is test
+        max_k = 15 # Maximum value of k for kNN
+        max_trade_size= 0.2 # Maximum amount of allocation allowed in a trade
 
         run_today(end_date=end_date, n_days=n_days, data_size=data_size,
                   myport=myport, allocations=allocations,
