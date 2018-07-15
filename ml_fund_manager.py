@@ -144,8 +144,7 @@ def test_experiment_one(n_days=21, data_size=12, train_size=0.7, max_k=50, max_t
     myport = ['AAPL', 'GLD']
     myalloc = [0.5,0.5]
 
-
-
+    myport, myalloc = util.verify_allocations()
 
     # Portfolio values for Holding the Same Allocation (conservative case)
     actual_prices = util.load_data(myport, start_date, end_date)
@@ -221,7 +220,7 @@ def test_experiment_one(n_days=21, data_size=12, train_size=0.7, max_k=50, max_t
 
 if __name__ == "__main__":
 
-    test = True
+    test = False
 
     initial_investment = 10000 # dollars invested from start
 
@@ -258,12 +257,12 @@ if __name__ == "__main__":
 
         years_to_go_back = 3
 
-        n_days = [7, 14, 21]  # How long the forecast should look out
+        n_days = [14, 21]  # How long the forecast should look out
         data_size = [3, 6, 12] #, 18]  # Number of months of data to use for Machine Learning
         train_size = [0.6, 0.7, 0.8]  # Percentage of data used for training, rest is test
         max_k = [5, 10, 15] #, 20, 25]  # Maximum value of k for kNN
         max_trade_size = [0.10, 0.20, 0.30] #, 0.40]  # Maximum amount of allocation allowed in a trade
-        years_to_go_back = [3, 2, 1]
+        years_to_go_back = [1]
 
         r_cons = []
         r_porvals = []
