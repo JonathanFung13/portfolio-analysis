@@ -60,12 +60,7 @@ def create_orders(symbols=['AAPL', 'GOOG'], actual=[0.5,0.5], target=[0.6,0.4], 
         sell['Quantity'] *= total_bought/total_sold
         sell['Quantity'] = np.round(sell['Quantity'], 3)
         total_sold = sell['Quantity'].sum()
-        sell['Quantity'][0] = sell['Quantity'][0] + total_bought - total_sold
-
-    #try:
-    #    assert 1 == 2, 'Inequals amounts bought or sold'
-    #except AssertionError as e:
-    #    print(e.message)
+        sell.loc[0, 'Quantity'] += total_bought - total_sold
 
     #assert buy['Quantity'].sum() == sell['Quantity'].sum(), 'Inequal amounts bought or sold'
 
