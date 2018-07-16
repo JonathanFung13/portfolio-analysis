@@ -86,12 +86,4 @@ def create_orders(symbols=['AAPL', 'GOOG'], actual=[0.5,0.5], target=[0.6,0.4], 
 
 
 if __name__ == "__main__":
-    print("This is just a training module.  Run portfolio-stats.py")
-
-    orders = create_orders(0.10)
-
-#    myport = ['VFFSX', 'VBTIX', 'LPSFX', 'VITPX', 'VMCPX', 'VSCPX', 'FMGEX', 'FSPNX']
-#    allocations = [0.5668, 0.0453, 0.3879, 0.0, 0.0, 0.0, 0.0, 0.0]
-
-    print(orders)
-
+    print("Run ml_fund_manager.py instead")

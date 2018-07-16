@@ -99,7 +99,7 @@ def load_data(symbols, start, end, addSPY=True, colname = 'Close'):
             print(symbol, "no data found")
 
         # If data files are missing data, redownload the whole range of data.
-        if (end - df_temp.index.max()).days > 1: # and end.weekday() < 5: # or df_temp.index.min() > start:
+        if (end - df_temp.index.max()).days > 1 and end.weekday() < 5: # or df_temp.index.min() > start:
             print("need data")
             if vanguard_code(symbol) != -1:
                 df_temp2 = extract_vanguard(symbol, df_temp.index.max()+dt.timedelta(days=1), end)
@@ -223,26 +223,4 @@ def plot_data(df, title="Stock prices", xlabel="Date", ylabel="Price"):
     plt.show()
 
 if __name__ == "__main__":
-
-    print("This is just a utility module.  Run portfolio-stats.py")
-
-    if True: # some junk parameters below to help with debugging
-        start_date = dt.datetime(2005, 1, 1)
-        end_date = dt.datetime(2018, 6, 27)
-
-        target_retirement = [] #['LIKKX']
-        stocks = ['DIS', 'TSLA']
-        passive_funds = ['VFFSX', 'VITPX', 'VMCPX', 'VSCPX', 'MDDCX','FSPNX', 'VBTIX']
-        active_funds = ['FMGEX', 'VMRXX', 'VUSXX']
-
-        myfunds = ['VFFSX', 'VITPX', 'VMCPX', 'VSCPX', 'VBTIX']
-
-        #symbols = passive_funds + active_funds
-        #load_data(stocks, start_date, end_date)
-        #load_data(passive_funds, start_date, end_date)
-        #extract_vanguard(myfunds, start_date, end_date)
-        extract_stocks(['FSPNX'], start_date, end_date)
-        #myport = ['IBM', 'GLD', 'XOM', 'AAPL', 'MSFT', 'TLT', 'SHY']
-        #extract_stocks(myport, start_date, end_date)
-
-
+    print("This is just a utility module.  Run ml_fund_manager.py instead")

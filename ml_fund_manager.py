@@ -35,18 +35,16 @@ def run_today(start_date=dt.datetime(2015,1,1), end_date=dt.datetime(2017,1,1), 
     start_date = calc_start_date(end_date, data_size)#end_date - dt.timedelta(weeks=int(data_size * 52/12))
     #print('start:', start_date, 'end:', end_date)
 
-    if verbose: print('-'*20 + '\nFORECAST\n' + '-'*20)
+    if verbose: print('-'*20 + '\nFORECASTING\n' + '-'*20)
     forecast = fc.forecast(start_date, end_date, symbols=myport, train_size=train_size,
                            n_days=n_days, max_k=max_k, gen_plot=gen_plot, verbose=verbose, savelogs=savelogs)
 
-    if verbose: print('\n'+'-'*20 + '\nOPTIMIZE\n' + '-'*20)
+    if verbose: print('\n'+'-'*20 + '\nOPTIMIZING\n' + '-'*20)
     target_allocations = opt.optimize_return(forecast, myport, allocations, gen_plot=gen_plot, verbose=verbose, savelogs=savelogs)
 
-    if verbose: print('\n' + '-'*20 + '\nORDERS\n' + '-'*20)
+    if verbose: print('\n' + '-'*20 + '\nCREATING ORDERS\n' + '-'*20)
     trade_date = forecast.index.max()
     orders = td.create_orders(myport, allocations, target_allocations, trade_date=trade_date,max_trade_size=max_trade_size, verbose=verbose, savelogs=savelogs)
-
-    if verbose: print(orders)
 
     new_allocations = allocations.copy()
     for i in range(orders.shape[0]):
@@ -65,19 +63,23 @@ def run_today(start_date=dt.datetime(2015,1,1), end_date=dt.datetime(2017,1,1), 
     adr_new, vol_new, sr_new, pv_new = util.compute_returns(forecast, allocations=new_allocations)
 
     if verbose:
+        print("\nPERFORMANCE\n" + "-" * 40)
         print("Portfolios:", "Current", "Target","New")
         print("Daily return: %.5f %.5f %.5f" % (adr_current, adr_target, adr_new))
         print("Daily Risk: %.5f %.5f %.5f" % (vol_current, vol_target, vol_new))
         print("Sharpe Ratio: %.5f %.5f %.5f" % (sr_current, sr_target, sr_new))
-        print("Return vs Risk: %.5f %.5f %.5f" % (adr_current/vol_current, adr_target/vol_target, adr_new/vol_new))
+
         print("\nALLOCATIONS\n" + "-" * 40)
         print("Symbol", "Current", "Target", 'New')
         for i, symbol in enumerate(myport):
             print("%s %.3f %.3f %.3f" %
                   (symbol, allocations[i], target_allocations[i], new_allocations[i]))
 
-    # Compare daily portfolio value with SPY using a normalized plot
-    if gen_plot:
+        print("\nORDERS\n" + "-" * 40)
+        print(orders)
+
+    # Plot returns versus risk for current, target and new allocations.
+    if gen_plot and False:
 
         fig, ax = plt.subplots()
         ax.scatter(vol_current, adr_current, c='green', s=15, alpha=0.5) # Current portfolio
@@ -92,6 +94,8 @@ def run_today(start_date=dt.datetime(2015,1,1), end_date=dt.datetime(2017,1,1), 
         fig.tight_layout()
         plt.show()
 
+    # Compare daily portfolio value with SPY using a normalized plot
+    if gen_plot:
 
         # add code to plot here
         df_temp = pd.concat([pv_current, pv_target, pv_new], keys=['Current', 'Target', 'New'], axis=1)
@@ -168,7 +172,7 @@ def test_experiment_one(n_days=21, data_size=12, train_size=0.7, max_k=50, max_t
         test_date = start_date + dt.timedelta(weeks=round(i*52*n_days/252))
         #print(i, temp, test_date)
 
-        if verbose: print(('EXPERIMENT %i - %s') % (i, str(test_date.strftime("%m/%d/%Y"))))
+        if verbose: print(('\nEXPERIMENT %i - %s') % (i, str(test_date.strftime("%m/%d/%Y"))))
 
         myalloc, trade_date = run_today(end_date=test_date, n_days=n_days, data_size=data_size,
                                     myport=myport, allocations=myalloc,
@@ -220,7 +224,7 @@ def test_experiment_one(n_days=21, data_size=12, train_size=0.7, max_k=50, max_t
 
 if __name__ == "__main__":
 
-    test = True
+    test = False
 
     initial_investment = 10000 # dollars invested from start
 

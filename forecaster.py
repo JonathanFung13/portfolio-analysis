@@ -93,7 +93,7 @@ def technical_indicators(start=dt.datetime(2015,1,1), end=dt.datetime(2017,1,1),
 
             plt.show()
 
-    if gen_plot:
+    if gen_plot and False: # no longer show plot of bollinger bands for all funds
 
         fig2, ax = plt.subplots(nrows=bb.shape[1], ncols=1)
 
@@ -174,17 +174,64 @@ def forecast(start=dt.datetime(2015,1,1), end=dt.datetime(2017,1,1), symbols=['A
     train_x, test_x, forecast_x, train_y, test_y = split_data(bb, rolling_std, momentum, psma, y,
                                                   train_size=train_size, n_days=n_days)
 
+    # Plot relationship between each feature X, and Y.
+    if gen_plot:
+
+        fig, ax = plt.subplots()
+        ax.scatter(bb, y, c='blue', s=5, alpha=0.1)
+        ax.set_xlabel('Bollinger Bands')
+        ax.set_ylabel('Mean Daily Returns')
+        #ax.set_xlim(min(bb)/1.5, max(bb)*1.5)
+        #ax.set_ylim(min(y)/1.5, max(y)*1.5)
+        ax.grid()
+        ax.grid(linestyle=':')
+        fig.tight_layout()
+        plt.show()
+
+        fig, ax = plt.subplots()
+        ax.scatter(rolling_std, y, c='blue', s=5, alpha=0.1)
+        ax.set_xlabel('Rolling Std')
+        ax.set_ylabel('Mean Daily Returns')
+        #ax.set_xlim(min(rolling_std)/1.5, max(rolling_std)*1.5)
+        #ax.set_ylim(min(y)/1.5, max(y)*1.5)
+        ax.grid()
+        ax.grid(linestyle=':')
+        fig.tight_layout()
+        plt.show()
+
+        fig, ax = plt.subplots()
+        ax.scatter(momentum, y, c='blue', s=5, alpha=0.1)
+        ax.set_xlabel('Momentum')
+        ax.set_ylabel('Mean Daily Returns')
+        #ax.set_xlim(min(momentum)/1.5, max(momentum)*1.5)
+        #ax.set_ylim(min(y)/1.5, max(y)*1.5)
+        ax.grid()
+        ax.grid(linestyle=':')
+        fig.tight_layout()
+        plt.show()
+
+        fig, ax = plt.subplots()
+        ax.scatter(psma, y, c='blue', s=5, alpha=0.1)
+        ax.set_xlabel('Price per SMA')
+        ax.set_ylabel('Mean Daily Returns')
+        #ax.set_xlim(min(psma)/1.5, max(psma)*1.5)
+        #ax.set_ylim(min(y)/1.5, max(y)*1.5)
+        ax.grid()
+        ax.grid(linestyle=':')
+        fig.tight_layout()
+        plt.show()
 
 
-    # construct the set of hyperparameters to tune
-    params = {'n_neighbors': np.arange(1, max_k), \
-              'weights': ['uniform', 'distance'], \
-              'p': [1, 2]}
 
     classifier = KNeighborsRegressor(n_neighbors=max_k) #, algorithm=algorithm)
 
     start_timer = time.time()
-    if False:
+    if True:
+        # construct the set of hyperparameters to tune
+        params = {'n_neighbors': np.arange(1, max_k), \
+                  'weights': ['uniform', 'distance'], \
+                  'p': [1, 2]}
+
         # grid = RandomizedSearchCV(classifier, params)
         grid = GridSearchCV(classifier, params)
         grid.fit(train_x, train_y)
@@ -236,7 +283,7 @@ def forecast(start=dt.datetime(2015,1,1), end=dt.datetime(2017,1,1), symbols=['A
     future = pd.date_range(end + dt.timedelta(days=-n_days+1), end)
     forecast_dr = pd.DataFrame(index=days)
     for symbol in symbols:
-        forecast_predY = pd.DataFrame(data=classifier.predict(forecast_x[symbol]), columns={symbol}, index=days)
+        forecast_predY = pd.DataFrame(data=grid.predict(forecast_x[symbol]), columns={symbol}, index=days)
 
 #        forecast_temp = forecast_temp.rename(columns={'Return': symbol})
         forecast_dr = forecast_dr.join(forecast_predY)
@@ -259,31 +306,5 @@ def forecast(start=dt.datetime(2015,1,1), end=dt.datetime(2017,1,1), symbols=['A
 
 
 if __name__ == "__main__":
-
-    if True:
-        start_date = dt.datetime(2017, 6, 27)
-        end_date = dt.datetime(2018, 6, 27)
-        myport = ['DIS', 'VFFSX', 'VBTIX', 'VITPX', 'VMCPX', 'VSCPX']
-        allocations = [0.0, 0.5668 + 0.3879, 0.0453, 0.0, 0.0, 0.0]
-        myport = ['VFFSX', 'VBTIX', 'LPSFX', 'VITPX', 'VMCPX', 'VSCPX', 'FMGEX', 'FSPNX']
-        allocations = [0.5668, 0.0453, 0.3879, 0.0, 0.0, 0.0, 0.0, 0.0]
-
-        #myfunds = ['DIS']
-        #myfunds = ['VFFSX', 'VBTIX']
-        #allocations = [0.95, 0.05]
-
-        forecast(start_date, end_date, myport, n_days=21, gen_plot=True)
-
-
-    else:
-        start_date = dt.datetime(2005, 1, 1)
-        end_date = dt.datetime(2018, 6, 14)
-
-        myport = ['IBM', 'GLD', 'XOM', 'AAPL', 'MSFT', 'TLT', 'SHY']
-        allocations = [0.14, 0.14, 0.14, 0.14, 0.14, 0.14, 0.02]
-        myport = ['IBM', 'GLD']
-        allocations = [0.25, 0.75]
-
-        train_x, test_x, train_y, test_y = technical_indicators(start=start_date, end=end_date, symbols=myport,
-                                                                train_size = 0.7, n_days=21, gen_plot=False)
+    print("Run ml_fund_manager.py instead")
 
