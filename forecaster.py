@@ -277,7 +277,6 @@ def forecast(start=dt.datetime(2015,1,1), end=dt.datetime(2017,1,1), symbols=['A
 
 
 if __name__ == "__main__":
-
     if True:
         start_date = dt.datetime(2017, 6, 27)
         end_date = dt.datetime(2018, 6, 27)
@@ -291,7 +290,6 @@ if __name__ == "__main__":
         #allocations = [0.95, 0.05]
 
         forecast(start_date, end_date, myport, n_days=21, gen_plot=True)
-
 
     else:
         start_date = dt.datetime(2005, 1, 1)

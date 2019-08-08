@@ -227,7 +227,6 @@ def plot_data(df, title="Stock prices", xlabel="Date", ylabel="Price"):
     plt.show()
 
 if __name__ == "__main__":
-
     print("This is just a utility module.  Run portfolio-stats.py")
 
     if True: # some junk parameters below to help with debugging

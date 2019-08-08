@@ -220,7 +220,6 @@ def test_experiment_one(n_days=21, data_size=12, train_size=0.7, max_k=50, max_t
     return ret_cons, ret_porvals, ret_SPY
 
 if __name__ == "__main__":
-
     work = True
 
     initial_investment = 10000 # dollars invested from start
