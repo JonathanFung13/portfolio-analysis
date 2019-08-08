@@ -61,7 +61,24 @@ def technical_indicators(start=dt.datetime(2015,1,1), end=dt.datetime(2017,1,1),
     y = prices.pct_change(n_days)
     y = y.shift(periods=-n_days)
 
-    # Plot all technical indicators
+    # Are daily returns normall distributed?
+    if True:
+        # the histogram of the data
+        for symbol in symbols:
+            temp = y.ix[:-n_days,symbol]
+            plt.hist(temp, bins=50) #, density=False, facecolor='g', alpha=0.75)
+
+            plt.xlabel('Return')
+            plt.ylabel('Probability')
+            plt.title('Histogram of 21 day returns')
+            #plt.text(60, .025, r'$\mu=100,\ \sigma=15$')
+            #plt.axis([40, 160, 0, 0.03])
+            plt.grid(True)
+            plt.show()
+
+
+
+    # Plot all technical indicators for each fund
     if gen_plot:
         day1 = 0
         day2 = bb.shape[0]
@@ -93,6 +110,7 @@ def technical_indicators(start=dt.datetime(2015,1,1), end=dt.datetime(2017,1,1),
 
             plt.show()
 
+    # Plot one figure with bollinger bands for each fund
     if gen_plot:
 
         fig2, ax = plt.subplots(nrows=bb.shape[1], ncols=1)

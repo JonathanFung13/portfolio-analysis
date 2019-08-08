@@ -221,7 +221,7 @@ def test_experiment_one(n_days=21, data_size=12, train_size=0.7, max_k=50, max_t
 
 if __name__ == "__main__":
 
-    test = True
+    work = True
 
     initial_investment = 10000 # dollars invested from start
 
@@ -232,13 +232,13 @@ if __name__ == "__main__":
 
     end_date = dt.datetime(yr, mo, da)
 
-    if test:
+    if work:
         print("Running ML Fund Manager")
 
         myport, allocations = util.verify_allocations()
 
         n_days = 21 # How long the forecast should look out
-        data_size = 12 # Number of months of data to use for Machine Learning
+        data_size = 3 # Number of months of data to use for Machine Learning
         train_size = 0.70 # Percentage of data used for training, rest is test
         max_k = 50 # Maximum value of k for kNN
         max_trade_size= 0.25 # Maximum amount of allocation allowed in a trade
@@ -263,7 +263,7 @@ if __name__ == "__main__":
         train_size = [0.6, 0.7, 0.8]  # Percentage of data used for training, rest is test
         max_k = [5, 10, 15] #, 20, 25]  # Maximum value of k for kNN
         max_trade_size = [0.10, 0.20, 0.30] #, 0.40]  # Maximum amount of allocation allowed in a trade
-        years_to_go_back = [3, 2, 1]
+        years_to_go_back = [2, 1]
 
         r_cons = []
         r_porvals = []
