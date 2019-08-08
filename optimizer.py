@@ -95,12 +95,13 @@ def optimize_return(forecasts, symbols=['AAPL', 'GOOG'],
     allocations_ef4 = np.sum([allocations_ef1, allocations_ef2, allocations_ef3], axis=0)
     allocations_ef4 = np.round(allocations_ef4 / 3, decimals=3)
 
-    adr_ef1, vol_ef1, sr_ef1, pv_ef1 = util.compute_returns(forecasts, allocations=allocations_ef1, rfr=rfr, sf=sf)
-    adr_ef2, vol_ef2, sr_ef2, pv_ef2 = util.compute_returns(forecasts, allocations=allocations_ef2, rfr=rfr, sf=sf)
-    adr_ef3, vol_ef3, sr_ef3, pv_ef3 = util.compute_returns(forecasts, allocations=allocations_ef3, rfr=rfr, sf=sf)
-    adr_ef4, vol_ef4, sr_ef4, pv_ef4 = util.compute_returns(forecasts, allocations=allocations_ef4, rfr=rfr, sf=sf)
+    if verbose or gen_plot:
+        adr_ef1, vol_ef1, sr_ef1, pv_ef1 = util.compute_returns(forecasts, allocations=allocations_ef1, rfr=rfr, sf=sf)
+        adr_ef2, vol_ef2, sr_ef2, pv_ef2 = util.compute_returns(forecasts, allocations=allocations_ef2, rfr=rfr, sf=sf)
+        adr_ef3, vol_ef3, sr_ef3, pv_ef3 = util.compute_returns(forecasts, allocations=allocations_ef3, rfr=rfr, sf=sf)
+        adr_ef4, vol_ef4, sr_ef4, pv_ef4 = util.compute_returns(forecasts, allocations=allocations_ef4, rfr=rfr, sf=sf)
 
-    if verbose:
+    if verbose and False: # not going to print these out from here anymore
         print("Portfolios:", "Current", "Efficient")
         print("Daily return: %.5f %.5f %.5f %.5f %.5f" % (adr_curr, adr_ef1, adr_ef2, adr_ef3, adr_ef4))
         print("Daily Risk: %.5f %.5f %.5f %.5f %.5f" % (vol_curr, vol_ef1, vol_ef2, vol_ef3, vol_ef4))
@@ -149,7 +150,7 @@ def optimize_return(forecasts, symbols=['AAPL', 'GOOG'],
         target_allocations = pd.DataFrame(data=allocations_ef4, index=symbols, columns=['Allocations']) #, index=)
         target_allocations.index.name = 'Symbol'
 
-        util.save_df_as_csv(target_allocations, 'allocations', 'target', 'Symbol')
+        util.save_df_as_csv(target_allocations, 'logs', 'target', 'Symbol')
 
     return allocations_ef4
 
@@ -157,48 +158,4 @@ def optimize_return(forecasts, symbols=['AAPL', 'GOOG'],
 
 
 if __name__ == "__main__":
-
-    useForecasts = True
-    start_date = dt.datetime(2017, 5, 4)
-    end_date = dt.datetime(2017, 6, 1)
-
-    myport = ['DIS', 'VFFSX', 'VBTIX', 'VITPX', 'VMCPX', 'VSCPX']
-    allocations = [0.0, 0.95, 0.05, 0.0, 0.0, 0.0]
-    myport = ['VFFSX', 'VBTIX']
-    allocations = [0.95, 0.05]
-    myport = ['VFFSX', 'VBTIX', 'LPSFX', 'VITPX', 'VMCPX', 'VSCPX', 'FMGEX', 'FSPNX']
-    allocations = [0.5668, 0.0453, 0.3879, 0.0, 0.0, 0.0, 0.0, 0.0]
-
-    if useForecasts:
-
-        forecasts = util.load_csv_as_df("forecasts", "day_21_forecast")
-        target_allocations = optimize_return(forecasts, myport, allocations, gen_plot=True)
-
-        print(target_allocations)
-
-    else:
-
-        forecasts = util.load_csv_as_df("forecasts", "fake_forecast") #"day_21_forecast")
-        # n_days = 21
-        #
-        # prices = util.load_data(myfunds, start_date, end_date + dt.timedelta(days=n_days*2))
-        # prices.fillna(method='ffill', inplace=True)
-        # prices.fillna(method='bfill', inplace=True)
-        # prices = prices[myfunds]  # prices of portfolio symbols
-        #
-        # # Create output value
-        # forecasts = prices.pct_change(n_days)
-        # forecasts = forecasts.shift(periods=-n_days)
-        # forecasts = forecasts[start_date:end_date]
-
-        target_allocations = optimize_return(forecasts, myport, allocations, gen_plot=True)
-
-        print(target_allocations)
-
-
-
-
-
-
-
-
+    print("Run ml_fund_manager.py instead")

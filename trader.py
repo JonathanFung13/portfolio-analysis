@@ -6,8 +6,8 @@ import utilities as util
 
 
 def load_allocations():
-    actual_allocations = util.load_csv_as_df('allocations','actual', 'Symbol')
-    target_allocations = util.load_csv_as_df('allocations','target', 'Symbol')
+    actual_allocations = util.load_csv_as_df('logs','actual', 'Symbol')
+    target_allocations = util.load_csv_as_df('logs','target', 'Symbol')
 
     return actual_allocations, target_allocations
 
@@ -60,12 +60,7 @@ def create_orders(symbols=['AAPL', 'GOOG'], actual=[0.5,0.5], target=[0.6,0.4], 
         sell['Quantity'] *= total_bought/total_sold
         sell['Quantity'] = np.round(sell['Quantity'], 3)
         total_sold = sell['Quantity'].sum()
-        sell['Quantity'][0] = sell['Quantity'][0] + total_bought - total_sold
-
-    #try:
-    #    assert 1 == 2, 'Inequals amounts bought or sold'
-    #except AssertionError as e:
-    #    print(e.message)
+        sell.loc[0, 'Quantity'] += total_bought - total_sold
 
     #assert buy['Quantity'].sum() == sell['Quantity'].sum(), 'Inequal amounts bought or sold'
 
@@ -75,23 +70,15 @@ def create_orders(symbols=['AAPL', 'GOOG'], actual=[0.5,0.5], target=[0.6,0.4], 
 
     if savelogs:
 
-        all_orders = util.load_csv_as_df('orders', 'orders', 'Trade_Num')
+        all_orders = util.load_csv_as_df('logs', 'orders', 'Trade_Num')
         #all_orders.set_index(ind)
         all_orders = pd.concat([all_orders, orders], axis=0, ignore_index=True)
 
-        util.save_df_as_csv(all_orders, 'orders', 'orders', 'Trade_Num')
+        util.save_df_as_csv(all_orders, 'logs', 'orders', 'Trade_Num')
 
 
     return orders
 
 
 if __name__ == "__main__":
-    print("This is just a training module.  Run portfolio-stats.py")
-
-    orders = create_orders(0.10)
-
-#    myport = ['VFFSX', 'VBTIX', 'LPSFX', 'VITPX', 'VMCPX', 'VSCPX', 'FMGEX', 'FSPNX']
-#    allocations = [0.5668, 0.0453, 0.3879, 0.0, 0.0, 0.0, 0.0, 0.0]
-
-    print(orders)
-
+    print("Run ml_fund_manager.py instead")
